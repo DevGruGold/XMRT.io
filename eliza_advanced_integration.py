@@ -191,50 +191,28 @@ class ElizaAdvancedIntegration:
         
         return {"dao_relevant": False}
     
-        def generate_enhanced_response(self, message: str, agent_type: str,
-                                 rag_sources: List, memory_context: Dict,
+            def generate_enhanced_response(self, message: str, agent_type: str, 
+                                 rag_sources: List, memory_context: Dict, 
                                  dao_context: Dict) -> Dict:
-        """FIXED: Generate actual intelligent responses"""
+        """Generate actual intelligent responses"""
         
         message_lower = message.lower()
         
-        # Technical Agent - generates actual code
         if agent_type == "Technical_Agent":
             if "javascript" in message_lower and "api" in message_lower:
-                response = """Here is the JavaScript code to call the Eliza API:
-
-```javascript
-const callElizaAPI = async (message) => {
-    const response = await fetch("https://xmrt-io.onrender.com/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message, user_id: "web_user" })
-    });
-    return await response.json();
-};
-```
-
-This code will connect your frontend to my advanced agent system."""
-            elif "code" in message_lower or "function" in message_lower:
-                response = "I can generate code for you. What specific programming task do you need? I specialize in JavaScript, Python, API integration, and XMRT ecosystem development."
+                response = "Here is JavaScript code to call the Eliza API:\n\n```javascript\nconst callElizaAPI = async (message) => {\n    const response = await fetch('https://xmrt-io.onrender.com/api/chat', {\n        method: 'POST',\n        headers: { 'Content-Type': 'application/json' },\n        body: JSON.stringify({ message, user_id: 'web_user' })\n    });\n    return await response.json();\n};\n```\n\nThis connects your frontend to my advanced agent system."
+            elif "code" in message_lower:
+                response = "I can generate code for you. What specific programming task do you need?"
             else:
-                response = "Technical Agent here. I handle code, APIs, debugging, and system architecture. What technical challenge can I solve for you?"
-        
-        # DAO Agent
+                response = "Technical Agent here. I handle code, APIs, debugging, and system architecture."
         elif agent_type == "DAO_Agent":
-            response = "DAO Agent reporting. I manage governance, proposals, voting, and treasury operations for the XMRT ecosystem. How can I help with DAO operations?"
-        
-        # Mining Agent
+            response = "DAO Agent reporting. I manage governance, proposals, and treasury operations."
         elif agent_type == "Mining_Agent":
-            response = "Mining Agent active. I optimize mining operations and manage the meshnet leaderboard. What mining-related task can I help with?"
-        
-        # Marketing Agent
+            response = "Mining Agent active. I optimize mining operations and manage the meshnet."
         elif agent_type == "Marketing_Agent":
-            response = "Marketing Agent ready. I create content and manage campaigns for XMRT ecosystem. Need help with marketing strategy or content creation?"
-        
-        # General Agent
+            response = "Marketing Agent ready. I create content and manage campaigns for XMRT."
         else:
-            response = f"I am analyzing your request: \"{message}\" and providing intelligent assistance through my advanced agent framework."
+            response = f"I am analyzing your request and providing intelligent assistance."
         
         return {
             "response": response,
