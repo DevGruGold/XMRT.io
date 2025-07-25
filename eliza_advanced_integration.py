@@ -191,37 +191,37 @@ class ElizaAdvancedIntegration:
         
         return {"dao_relevant": False}
     
-            def generate_enhanced_response(self, message: str, agent_type: str, 
-                                 rag_sources: List, memory_context: Dict, 
-                                 dao_context: Dict) -> Dict:
+    def generate_enhanced_response(self, message: str, agent_type: str,
+        rag_sources: List, memory_context: Dict, 
+        dao_context: Dict) -> Dict:
         """Generate actual intelligent responses"""
         
         message_lower = message.lower()
         
         if agent_type == "Technical_Agent":
-            if "javascript" in message_lower and "api" in message_lower:
-                response = "Here is JavaScript code to call the Eliza API:\n\n```javascript\nconst callElizaAPI = async (message) => {\n    const response = await fetch('https://xmrt-io.onrender.com/api/chat', {\n        method: 'POST',\n        headers: { 'Content-Type': 'application/json' },\n        body: JSON.stringify({ message, user_id: 'web_user' })\n    });\n    return await response.json();\n};\n```\n\nThis connects your frontend to my advanced agent system."
-            elif "code" in message_lower:
-                response = "I can generate code for you. What specific programming task do you need?"
-            else:
-                response = "Technical Agent here. I handle code, APIs, debugging, and system architecture."
-        elif agent_type == "DAO_Agent":
-            response = "DAO Agent reporting. I manage governance, proposals, and treasury operations."
-        elif agent_type == "Mining_Agent":
-            response = "Mining Agent active. I optimize mining operations and manage the meshnet."
-        elif agent_type == "Marketing_Agent":
-            response = "Marketing Agent ready. I create content and manage campaigns for XMRT."
+        if "javascript" in message_lower and "api" in message_lower:
+        response = "Here is JavaScript code to call the Eliza API:\n\n```javascript\nconst callElizaAPI = async (message) => {\n    const response = await fetch('https://xmrt-io.onrender.com/api/chat', {\n        method: 'POST',\n        headers: { 'Content-Type': 'application/json' },\n        body: JSON.stringify({ message, user_id: 'web_user' })\n    });\n    return await response.json();\n};\n```\n\nThis connects your frontend to my advanced agent system."
+        elif "code" in message_lower:
+        response = "I can generate code for you. What specific programming task do you need?"
         else:
-            response = f"I am analyzing your request and providing intelligent assistance."
+        response = "Technical Agent here. I handle code, APIs, debugging, and system architecture."
+        elif agent_type == "DAO_Agent":
+        response = "DAO Agent reporting. I manage governance, proposals, and treasury operations."
+        elif agent_type == "Mining_Agent":
+        response = "Mining Agent active. I optimize mining operations and manage the meshnet."
+        elif agent_type == "Marketing_Agent":
+        response = "Marketing Agent ready. I create content and manage campaigns for XMRT."
+        else:
+        response = f"I am analyzing your request and providing intelligent assistance."
         
         return {
-            "response": response,
-            "agent_type": agent_type,
-            "rag_sources_used": len(rag_sources),
-            "memory_accessed": memory_context.get("relevant_memories", 0),
-            "dao_context_active": dao_context.get("dao_relevant", False),
-            "confidence": 0.9,
-            "enhanced": True
+        "response": response,
+        "agent_type": agent_type,
+        "rag_sources_used": len(rag_sources),
+        "memory_accessed": memory_context.get("relevant_memories", 0),
+        "dao_context_active": dao_context.get("dao_relevant", False),
+        "confidence": 0.9,
+        "enhanced": True
         }
 
     def store_advanced_conversation(self, user_id: str, message: str, 
