@@ -52,6 +52,17 @@ class ChatMessage(BaseModel):
     message: str
     user_id: str = "web_user"
 
+# --- Gemini integration (TOP LEVEL, not inside any function!) ---
+import google.generativeai as genai
+genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
+
+@app.post("/api/chat")
+async def chat_endpoint(message: dict):
+    prompt = message.get("message", "")
+    model = genai.GenerativeModel("gemini-pro")
+    response = model.generate_content(prompt)
+    return {"response": response.text}
+
 @app.get("/")
 async def root():
     return {
@@ -72,18 +83,6 @@ async def root():
         ],
         "timestamp": datetime.now().isoformat()
     }
-
-
-    import google.generativeai as genai
-    genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
-
-    @app.post("/api/chat")
-    async def chat_endpoint(message: dict):
-        prompt = message.get("message", "")
-        model = genai.GenerativeModel("gemini-pro")
-        response = model.generate_content(prompt)
-        return {"response": response.text}
-
 
 @app.get("/api/advanced/status")
 async def advanced_status():
