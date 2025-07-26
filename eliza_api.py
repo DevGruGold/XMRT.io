@@ -74,54 +74,28 @@ async def root():
 @app.post("/api/chat")
 async def advanced_chat(message: ChatMessage):
     start_time = time.time()
-    
-    # Use advanced integration if available
+
+    # Use advanced integration if available - NO MORE TEMPLATE MASKS!
     if ADVANCED_AVAILABLE and advanced_eliza:
         result = advanced_eliza.process_with_agents(message.message, message.user_id)
-
-        # OVERRIDE: Extract actual response from result
-        if isinstance(eliza_response, dict) and "response" in eliza_response:
-            final_response = eliza_response["response"]
-        elif hasattr(eliza_response, "get"):
-            final_response = eliza_response.get("response", str(eliza_response))
-        else:
-            final_response = str(eliza_response)
-        
-        # Check if it's still a template and override
-        if "[" in final_response and "] Processing your query:" in final_response:
-            # Force intelligent response
-            if "javascript" in message.message.lower() and "api" in message.message.lower():
-                final_response = "Here is JavaScript code to call the API:\n\n```javascript\nconst callAPI = async (msg) => {\n  const res = await fetch('https://xmrt-io.onrender.com/api/chat', {\n    method: 'POST',\n    headers: {'Content-Type': 'application/json'},\n    body: JSON.stringify({message: msg, user_id: 'web'})\n  });\n  return await res.json();\n};\n```"
-            elif "Technical_Agent" in final_response:
-                final_response = "Technical Agent ready! I handle coding, APIs, debugging, and technical architecture. What can I build for you?"
-            elif "DAO_Agent" in final_response:
-                final_response = "DAO Agent here! I manage governance proposals, voting systems, and treasury operations."
-            elif "Mining_Agent" in final_response:
-                final_response = "Mining Agent operational! I optimize hash rates and manage mining pools."
-            elif "Marketing_Agent" in final_response:
-                final_response = "Marketing Agent activated! I create compelling content and manage campaigns."
-            else:
-                final_response = "I'm your advanced AI assistant with specialized agents for different tasks. How can I help you today?"
-        else:
-            final_response = eliza_response
         response = result["response"]
         agent_type = result["agent_type"]
-        
+
     elif CORE_AVAILABLE and eliza_core:
         response = eliza_core.process_prompt(message.user_id, message.message)
         agent_type = "Core"
-        
+
     else:
         response = f"Processing: {message.message}"
         agent_type = "Fallback"
-    
+
     # Learn from conversation
     if LEARNING_AVAILABLE and learning_engine:
         response_time = (time.time() - start_time) * 1000
         learning_engine.learn_from_conversation(
             message.message, response, response_time, message.user_id
         )
-    
+
     return {
         "response": response,
         "agent_type": agent_type,
@@ -140,19 +114,19 @@ async def advanced_status():
         },
         "capabilities": []
     }
-    
+
     if ADVANCED_AVAILABLE:
         advanced_stats = advanced_eliza.get_advanced_stats()
         status.update(advanced_stats)
         status["capabilities"].extend([
             "Agent Framework", "RAG System", "Advanced Memory", "DAO Context"
         ])
-    
+
     if LEARNING_AVAILABLE:
         learning_stats = learning_engine.get_learning_stats()
         status["learning"] = learning_stats
         status["capabilities"].append("Autonomous Learning")
-    
+
     return status
 
 @app.get("/api/agents/list")
