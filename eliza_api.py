@@ -38,7 +38,7 @@ except ImportError:
     eliza_core = None
     CORE_AVAILABLE = False
 
-app = FastAPI(title="Eliza Advanced Autonomous API", version="3.2.0")
+app = FastAPI(title="Eliza Advanced Autonomous API", version="4.0.0")
 
 app.add_middleware(
     CORSMiddleware,
@@ -57,7 +57,7 @@ async def root():
     return {
         "service": "Eliza Advanced Autonomous API",
         "version": "3.2.0",
-        "status": "FULLY OPERATIONAL",
+        "status": "HOTFIX_BRANCH_DEPLOYED",
         "systems": {
             "learning_engine": LEARNING_AVAILABLE,
             "advanced_integration": ADVANCED_AVAILABLE,
