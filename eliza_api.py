@@ -52,22 +52,6 @@ class ChatMessage(BaseModel):
     message: str
     user_id: str = "web_user"
 
-# --- Gemini integration (TOP LEVEL, not inside any function!) ---
-import google.generativeai as genai
-genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
-
-@app.post("/api/chat")
-async def chat_endpoint(message: ChatMessage):
-    try:
-        prompt = message.message
-        model = genai.GenerativeModel("models/gemini-pro")
-        response = model.generate_content(prompt)
-        return {"response": response.text}
-    except Exception as e:
-        print("ERROR in /api/chat:", e)
-        raise HTTPException(status_code=500, detail=str(e))
-
-
 @app.get("/")
 async def root():
     return {
