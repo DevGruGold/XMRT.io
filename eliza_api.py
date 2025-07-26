@@ -57,11 +57,16 @@ import google.generativeai as genai
 genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
 
 @app.post("/api/chat")
-async def chat_endpoint(message: dict):
-    prompt = message.get("message", "")
-    model = genai.GenerativeModel("gemini-pro")
-    response = model.generate_content(prompt)
-    return {"response": response.text}
+async def chat_endpoint(message: ChatMessage):
+    try:
+        prompt = message.message
+        model = genai.GenerativeModel("models/gemini-pro")
+        response = model.generate_content(prompt)
+        return {"response": response.text}
+    except Exception as e:
+        print("ERROR in /api/chat:", e)
+        raise HTTPException(status_code=500, detail=str(e))
+
 
 @app.get("/")
 async def root():
