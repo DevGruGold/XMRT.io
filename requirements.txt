@@ -6,3 +6,5 @@ uvicorn
 gunicorn
 
 fastapi
+
+python-dotenv
