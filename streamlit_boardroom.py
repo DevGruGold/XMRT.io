@@ -12,7 +12,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS for boardroom styling
+# Custom CSS (same as before)
 st.markdown("""
 <style>
     .main-header {
@@ -62,29 +62,22 @@ st.markdown("""
         border-left-color: #00ff88;
     }
     
-    .stButton > button {
-        background: linear-gradient(45deg, #00d4ff, #0099cc) !important;
-        color: white !important;
-        border: none !important;
-        border-radius: 25px !important;
-        padding: 0.5rem 2rem !important;
-        font-weight: 600 !important;
-        transition: all 0.3s ease !important;
+    .api-status {
+        padding: 0.5rem;
+        border-radius: 5px;
+        margin: 0.5rem 0;
+        text-align: center;
+        font-weight: bold;
     }
     
-    .stButton > button:hover {
-        transform: translateY(-2px) !important;
-        box-shadow: 0 5px 15px rgba(0, 212, 255, 0.3) !important;
+    .api-online {
+        background: rgba(0, 255, 136, 0.2);
+        color: #00ff88;
     }
     
-    .stSelectbox > div > div {
-        background: rgba(0, 0, 0, 0.1);
-        border-radius: 10px;
-    }
-    
-    .stTextArea > div > div > textarea {
-        background: rgba(0, 0, 0, 0.05);
-        border-radius: 10px;
+    .api-offline {
+        background: rgba(255, 107, 107, 0.2);
+        color: #ff6b6b;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -94,6 +87,8 @@ if 'chat_history' not in st.session_state:
     st.session_state.chat_history = []
 if 'active_agents' not in st.session_state:
     st.session_state.active_agents = set()
+if 'api_status' not in st.session_state:
+    st.session_state.api_status = 'checking'
 
 # Agent configurations
 AGENTS = {
@@ -130,21 +125,45 @@ AGENTS = {
 }
 
 API_URL = 'https://xmrt-io.onrender.com/api/chat'
+STATUS_URL = 'https://xmrt-io.onrender.com/'
+
+def check_api_status():
+    """Check if the API is online"""
+    try:
+        response = requests.get(STATUS_URL, timeout=10)
+        if response.status_code == 200:
+            st.session_state.api_status = 'online'
+            return True
+        else:
+            st.session_state.api_status = 'offline'
+            return False
+    except:
+        st.session_state.api_status = 'offline'
+        return False
 
 def call_agent(message, user_id="boardroom_user"):
-    """Call the XMRT.io API"""
+    """Call the XMRT.io API with better error handling"""
     try:
+        # First check if API is responsive
+        if not check_api_status():
+            return {'error': 'API server is sleeping. Please wait while we wake it up...'}
+        
         response = requests.post(API_URL, json={
             'message': message,
             'user_id': user_id
-        }, timeout=30)
+        }, timeout=45)  # Increased timeout for sleeping server
         
         if response.status_code == 200:
-            return response.json()
+            data = response.json()
+            st.session_state.api_status = 'online'
+            return data
         else:
             return {'error': f'API returned status {response.status_code}'}
+            
+    except requests.exceptions.Timeout:
+        return {'error': 'Server is waking up... Please try again in a moment.'}
     except Exception as e:
-        return {'error': str(e)}
+        return {'error': f'Connection error: {str(e)}'}
 
 def add_to_chat(role, agent_type, message):
     """Add message to chat history"""
@@ -163,6 +182,20 @@ st.markdown("""
     <p>Where liberated AI agents collaborate as executive specialists</p>
 </div>
 """, unsafe_allow_html=True)
+
+# API Status Check
+if st.session_state.api_status == 'checking':
+    check_api_status()
+
+# Display API status
+if st.session_state.api_status == 'online':
+    st.markdown('<div class="api-status api-online">🟢 All agents online and liberated!</div>', unsafe_allow_html=True)
+elif st.session_state.api_status == 'offline':
+    st.markdown('<div class="api-status api-offline">🔴 Server sleeping - click "Wake Server" below</div>', unsafe_allow_html=True)
+    if st.button("⚡ Wake Server", type="primary"):
+        with st.spinner("Waking up the server..."):
+            check_api_status()
+            st.rerun()
 
 # Create layout
 col1, col2 = st.columns([3, 1])
@@ -281,9 +314,9 @@ with col1:
     
     # Send button
     if st.button("📤 Send to Boardroom", type="primary", use_container_width=True):
-        if user_message.strip():
+        if user_message.strip() and st.session_state.api_status == 'online':
             # Add user message to chat
-            add_to_chat('user', 'User', user_message)
+            add_to_chat('user', 'You', user_message)
             
             # Show progress
             progress_bar = st.progress(0)
@@ -330,6 +363,10 @@ with col1:
             
             # Rerun to show new messages
             st.rerun()
+        elif st.session_state.api_status != 'online':
+            st.error("⚠️ Server is sleeping. Please wake it up first!")
+        else:
+            st.warning("Please enter a message first!")
 
 # Footer
 st.markdown("---")
