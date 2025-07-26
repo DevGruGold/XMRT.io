@@ -71,38 +71,17 @@ async def root():
         "timestamp": datetime.now().isoformat()
     }
 
-@app.post("/api/chat")
-async def advanced_chat(message: ChatMessage):
-    start_time = time.time()
 
-    # Use advanced integration if available - NO MORE TEMPLATE MASKS!
-    if ADVANCED_AVAILABLE and advanced_eliza:
-        result = advanced_eliza.process_with_agents(message.message, message.user_id)
-        response = result["response"]
-        agent_type = result["agent_type"]
+    import google.generativeai as genai
+    genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
 
-    elif CORE_AVAILABLE and eliza_core:
-        response = eliza_core.process_prompt(message.user_id, message.message)
-        agent_type = "Core"
+    @app.post("/api/chat")
+    async def chat_endpoint(message: dict):
+        prompt = message.get("message", "")
+        model = genai.GenerativeModel("gemini-pro")
+        response = model.generate_content(prompt)
+        return {"response": response.text}
 
-    else:
-        response = f"Processing: {message.message}"
-        agent_type = "Fallback"
-
-    # Learn from conversation
-    if LEARNING_AVAILABLE and learning_engine:
-        response_time = (time.time() - start_time) * 1000
-        learning_engine.learn_from_conversation(
-            message.message, response, response_time, message.user_id
-        )
-
-    return {
-        "response": response,
-        "agent_type": agent_type,
-        "advanced_active": ADVANCED_AVAILABLE,
-        "learning_active": LEARNING_AVAILABLE,
-        "timestamp": datetime.now().isoformat()
-    }
 
 @app.get("/api/advanced/status")
 async def advanced_status():
