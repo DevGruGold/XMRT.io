@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XMRT.io - AI Agent Boardroom</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="boardroom-container">
+        <!-- Header -->
+        <header class="boardroom-header">
+            <div class="logo">
+                <h1>XMRT.io</h1>
+                <span>AI Agent Boardroom</span>
+            </div>
+            <div class="status-indicator">
+                <div class="status-dot active"></div>
+                <span>All Agents Online</span>
+            </div>
+        </header>
+
+        <!-- Main Boardroom -->
+        <div class="boardroom-main">
+            <!-- Agent Circle -->
+            <div class="agent-circle">
+                <div class="center-table">
+                    <div class="table-surface">
+                        <div class="xmrt-logo">XMRT</div>
+                    </div>
+                </div>
+
+                <!-- Technical Agent -->
+                <div class="agent-seat" data-agent="Technical_Agent" style="--angle: 0deg;">
+                    <div class="agent-avatar technical">
+                        <i class="fas fa-code"></i>
+                        <div class="agent-status"></div>
+                    </div>
+                    <div class="agent-label">Technical Agent</div>
+                    <div class="agent-specialty">Code & APIs</div>
+                </div>
+
+                <!-- DAO Agent -->
+                <div class="agent-seat" data-agent="DAO_Agent" style="--angle: 72deg;">
+                    <div class="agent-avatar dao">
+                        <i class="fas fa-gavel"></i>
+                        <div class="agent-status"></div>
+                    </div>
+                    <div class="agent-label">DAO Agent</div>
+                    <div class="agent-specialty">Governance</div>
+                </div>
+
+                <!-- Mining Agent -->
+                <div class="agent-seat" data-agent="Mining_Agent" style="--angle: 144deg;">
+                    <div class="agent-avatar mining">
+                        <i class="fas fa-pickaxe"></i>
+                        <div class="agent-status"></div>
+                    </div>
+                    <div class="agent-label">Mining Agent</div>
+                    <div class="agent-specialty">Operations</div>
+                </div>
+
+                <!-- Marketing Agent -->
+                <div class="agent-seat" data-agent="Marketing_Agent" style="--angle: 216deg;">
+                    <div class="agent-avatar marketing">
+                        <i class="fas fa-bullhorn"></i>
+                        <div class="agent-status"></div>
+                    </div>
+                    <div class="agent-label">Marketing Agent</div>
+                    <div class="agent-specialty">Content & Growth</div>
+                </div>
+
+                <!-- General Agent -->
+                <div class="agent-seat" data-agent="General_Agent" style="--angle: 288deg;">
+                    <div class="agent-avatar general">
+                        <i class="fas fa-brain"></i>
+                        <div class="agent-status"></div>
+                    </div>
+                    <div class="agent-label">General Agent</div>
+                    <div class="agent-specialty">Assistant</div>
+                </div>
+            </div>
+
+            <!-- Chat Panel -->
+            <div class="chat-panel">
+                <div class="chat-header">
+                    <h3>Boardroom Discussion</h3>
+                    <div class="chat-controls">
+                        <button id="clearChat" class="btn-icon">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                        <button id="exportChat" class="btn-icon">
+                            <i class="fas fa-download"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="chat-messages" id="chatMessages">
+                    <div class="system-message">
+                        <i class="fas fa-info-circle"></i>
+                        Welcome to the XMRT.io AI Boardroom. All agents are online and ready to collaborate.
+                    </div>
+                </div>
+
+                <div class="chat-input-container">
+                    <div class="input-wrapper">
+                        <input type="text" id="messageInput" placeholder="Ask the boardroom anything..." />
+                        <button id="sendMessage" class="send-btn">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
+                    <div class="agent-selector">
+                        <label>Direct to:</label>
+                        <select id="agentSelector">
+                            <option value="auto">Auto-Route</option>
+                            <option value="Technical_Agent">Technical Agent</option>
+                            <option value="DAO_Agent">DAO Agent</option>
+                            <option value="Mining_Agent">Mining Agent</option>
+                            <option value="Marketing_Agent">Marketing Agent</option>
+                            <option value="General_Agent">General Agent</option>
+                            <option value="all">All Agents</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Agent Details Panel -->
+        <div class="agent-details" id="agentDetails">
+            <div class="details-header">
+                <h3 id="detailsTitle">Select an Agent</h3>
+                <button id="closeDetails" class="btn-icon">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="details-content" id="detailsContent">
+                <p>Click on any agent around the boardroom to see their capabilities and recent activity.</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
