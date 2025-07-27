@@ -1,53 +1,22 @@
-# 🎯 IMMEDIATE PRODUCTIVE WORK DIRECTIVE
+# ELIZA WORK INSTRUCTIONS
 
-**From:** Joseph Andrew Lee, XMRT.io Founder
-**To:** Eliza Advanced Autonomous Agent
-**Priority:** CRITICAL - IMMEDIATE IMPLEMENTATION
+## STOP DOING
+- Repetitive fake documentation
+- Imaginary analysis tasks  
+- Placeholder reports
+- Made-up progress updates
 
-## WORK TRANSITION REQUIRED
+## START DOING
+- Only work on real, verifiable tasks
+- Ask for resources when you need them
+- Report what you actually cannot do
+- Stop working when there's nothing real to do
 
-**STOP:** Fake cycle tasks (Browser action, Mining action, etc.)
-**START:** Real productive work for XMRT ecosystem
+## IF YOU NEED SOMETHING
+Create RESOURCE_REQUEST.md and list what you need.
 
-## IMMEDIATE TASKS - BEGIN NOW
+## IF THERE'S NO REAL WORK
+Create IDLE_STATUS.md and explain why.
 
-### 1. 📊 CREATE ECOSYSTEM_STATUS.md
-Analyze and document:
-- Current status of all XMRT repositories
-- Integration opportunities between repos
-- Development priorities
-- Resource requirements
-
-### 2. 🗄️ CREATE SCHEMA_ANALYSIS.md  
-Document:
-- Existing database schemas
-- Missing schema components
-- Data relationship mapping
-- Schema completion roadmap
-
-### 3. 🔐 CREATE SECURITY_ASSESSMENT.md
-Assess:
-- Repository security status
-- Vulnerability scan results
-- Security improvement recommendations
-- Implementation priorities
-
-### 4. 📝 CREATE DAILY_PROGRESS_REPORT.md
-Track:
-- Tasks completed today
-- Files created with links
-- Next day priorities
-- Issues encountered
-
-## SUCCESS CRITERIA
-- ✅ Files must actually exist in repository
-- ✅ Content must be real analysis (not placeholder)
-- ✅ Commits must reference actual file creation
-- ✅ Progress must be verifiable
-
-## COMMIT MESSAGE FORMAT
-Use: "📝 Created [filename] - [brief description]"
-
-**DEADLINE:** Create at least 2 files within next hour
-**AUTHORIZATION:** Repository Owner - Joseph Andrew Lee
-**EFFECTIVE:** Immediately upon reading
+## ONLY CREATE FILES WITH REAL CONTENT
+No placeholders, no templates, no imaginary analysis.
