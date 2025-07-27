@@ -1,0 +1,31 @@
+{
+  "deployment_mode": "productive",
+  "fake_cycles_disabled": true,
+  "real_work_enabled": true,
+  "productive_tasks": {
+    "ecosystem_development": {
+      "priority": "high",
+      "enabled": true,
+      "tasks": [
+        "audit_all_repositories",
+        "document_current_architecture",
+        "identify_integration_opportunities",
+        "create_development_roadmap"
+      ],
+      "interval_minutes": 30
+    },
+    "schema_completion": {
+      "priority": "critical",
+      "enabled": true,
+      "tasks": [
+        "analyze_existing_database_schemas",
+        "identify_missing_schema_components",
+        "document_data_relationships",
+        "create_schema_completion_plan"
+      ],
+      "interval_minutes": 60
+    },
+    "file_creation_required": true,
+    "honest_reporting_only": true
+  }
+}
