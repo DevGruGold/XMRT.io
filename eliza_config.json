@@ -1,5 +1,11 @@
 {
-  "deployment_mode": "productive",
-  "cycle_override": true,
-  "create_real_files": true
+  "mode": "productive_only",
+  "fake_tasks_disabled": true,
+  "repetitive_documentation_disabled": true,
+  "work_rules": {
+    "no_imaginary_tasks": true,
+    "require_real_resources": true,
+    "ask_for_help_when_stuck": true,
+    "stop_when_no_real_work": true
+  }
 }
