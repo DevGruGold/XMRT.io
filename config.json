@@ -1,0 +1,10 @@
+{
+  "mode": "productive",
+  "fake_tasks_disabled": true,
+  "file_creation_required": true,
+  "task_override": {
+    "Browser action": "Ecosystem Analysis",
+    "Mining action": "Schema Documentation",
+    "Analytics action": "Security Assessment"
+  }
+}
