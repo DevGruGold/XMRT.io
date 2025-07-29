@@ -5,7 +5,7 @@ services:
     region: oregon
     plan: free
     buildCommand: pip install -r requirements.txt
-    startCommand: uvicorn knowledge_bridge:app --host 0.0.0.0 --port $PORT
+    startCommand: python -m uvicorn knowledge_bridge:app --host 0.0.0.0 --port $PORT
     envVars:
       - key: GITHUB_TOKEN
         value: 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
