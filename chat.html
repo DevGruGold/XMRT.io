@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat with Eliza - XMRT AI Assistant</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .chat-container {
+            width: 90%;
+            max-width: 800px;
+            height: 90vh;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .chat-header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .chat-header h1 {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+
+        .chat-header p {
+            opacity: 0.9;
+            font-size: 14px;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            background: #4ade80;
+            border-radius: 50%;
+            margin-right: 8px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background: #f8fafc;
+        }
+
+        .message {
+            margin-bottom: 20px;
+            display: flex;
+            align-items: flex-start;
+        }
+
+        .message.user {
+            justify-content: flex-end;
+        }
+
+        .message-content {
+            max-width: 70%;
+            padding: 15px 20px;
+            border-radius: 20px;
+            word-wrap: break-word;
+        }
+
+        .message.user .message-content {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .message.eliza .message-content {
+            background: white;
+            border: 2px solid #e2e8f0;
+            color: #334155;
+        }
+
+        .message-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin: 0 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+        }
+
+        .message.user .message-avatar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .message.eliza .message-avatar {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        .message-meta {
+            font-size: 11px;
+            opacity: 0.7;
+            margin-top: 5px;
+        }
+
+        .chat-input-container {
+            padding: 20px;
+            background: white;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .chat-input-form {
+            display: flex;
+            gap: 10px;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 15px 20px;
+            border: 2px solid #e2e8f0;
+            border-radius: 25px;
+            font-size: 16px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .chat-input:focus {
+            border-color: #4facfe;
+        }
+
+        .send-button {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: transform 0.2s;
+        }
+
+        .send-button:hover {
+            transform: scale(1.05);
+        }
+
+        .send-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .typing-indicator {
+            display: none;
+            padding: 15px 20px;
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 20px;
+            max-width: 70%;
+            margin-bottom: 20px;
+        }
+
+        .typing-dots {
+            display: flex;
+            gap: 4px;
+        }
+
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            background: #94a3b8;
+            border-radius: 50%;
+            animation: typing 1.4s infinite;
+        }
+
+        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes typing {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-10px); }
+        }
+
+        .system-message {
+            text-align: center;
+            color: #64748b;
+            font-size: 14px;
+            margin: 20px 0;
+            padding: 10px;
+            background: #f1f5f9;
+            border-radius: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .chat-container {
+                width: 95%;
+                height: 95vh;
+                border-radius: 10px;
+            }
+            
+            .message-content {
+                max-width: 85%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">
+            <h1><span class="status-indicator"></span>Eliza - XMRT AI Assistant</h1>
+            <p>Powered by 739+ autonomous learning cycles</p>
+        </div>
+        
+        <div class="chat-messages" id="chatMessages">
+            <div class="system-message">
+                🤖 Eliza is online and ready to chat! She has access to 739+ autonomous learning cycles across 6 specialized domains.
+            </div>
+            
+            <div class="message eliza">
+                <div class="message-avatar">🤖</div>
+                <div class="message-content">
+                    Hello! I'm Eliza, your XMRT AI assistant. I have access to 739+ autonomous learning cycles covering analytics, development, marketing, mining, browser optimization, and social media insights. What would you like to know?
+                    <div class="message-meta">Connected to autonomous knowledge base</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="typing-indicator" id="typingIndicator">
+            <div class="message-avatar">🤖</div>
+            <div class="typing-dots">
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+            </div>
+        </div>
+        
+        <div class="chat-input-container">
+            <form class="chat-input-form" id="chatForm">
+                <input 
+                    type="text" 
+                    id="chatInput" 
+                    class="chat-input" 
+                    placeholder="Ask me about development, analytics, marketing, or anything else..."
+                    autocomplete="off"
+                >
+                <button type="submit" class="send-button" id="sendButton">Send</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'https://xmrt-io.onrender.com';
+        const chatMessages = document.getElementById('chatMessages');
+        const chatForm = document.getElementById('chatForm');
+        const chatInput = document.getElementById('chatInput');
+        const sendButton = document.getElementById('sendButton');
+        const typingIndicator = document.getElementById('typingIndicator');
+
+        // Auto-focus input
+        chatInput.focus();
+
+        // Handle form submission
+        chatForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const message = chatInput.value.trim();
+            if (!message) return;
+
+            // Add user message
+            addMessage('user', message);
+            chatInput.value = '';
+            
+            // Show typing indicator
+            showTyping();
+            
+            // Get Eliza's response
+            await getElizaResponse(message);
+        });
+
+        function addMessage(sender, content, meta = '') {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}`;
+            
+            const avatar = sender === 'user' ? '👤' : '🤖';
+            const timestamp = new Date().toLocaleTimeString();
+            
+            messageDiv.innerHTML = `
+                <div class="message-avatar">${avatar}</div>
+                <div class="message-content">
+                    ${content}
+                    ${meta ? `<div class="message-meta">${meta}</div>` : ''}
+                </div>
+            `;
+            
+            chatMessages.insertBefore(messageDiv, typingIndicator);
+            scrollToBottom();
+        }
+
+        function showTyping() {
+            typingIndicator.style.display = 'flex';
+            sendButton.disabled = true;
+            scrollToBottom();
+        }
+
+        function hideTyping() {
+            typingIndicator.style.display = 'none';
+            sendButton.disabled = false;
+        }
+
+        function scrollToBottom() {
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        async function getElizaResponse(userMessage) {
+            try {
+                // Classify the query to determine the best approach
+                const category = classifyQuery(userMessage);
+                
+                let elizaResponse = '';
+                let knowledgeSources = 0;
+                
+                // Try to get relevant insights
+                const insights = await fetchRelevantInsights(userMessage, category);
+                
+                if (insights && insights.length > 0) {
+                    // Generate response based on insights
+                    const latestInsight = insights[0];
+                    const cycleNum = latestInsight.cycle || 'N/A';
+                    const content = latestInsight.content || '';
+                    
+                    elizaResponse = `Based on my autonomous analysis from cycle #${cycleNum}: ${content}`;
+                    knowledgeSources = insights.length;
+                    
+                    // Add contextual enhancement
+                    if (userMessage.toLowerCase().includes('how') || userMessage.toLowerCase().includes('status')) {
+                        elizaResponse += `\n\nI found this information by analyzing ${knowledgeSources} relevant autonomous learning cycles. Would you like me to dive deeper into any specific aspect?`;
+                    }
+                } else {
+                    // Fallback response
+                    elizaResponse = `I understand you're asking about "${userMessage}". While I don't have specific autonomous insights for this exact query right now, I have access to 739+ learning cycles across analytics, development, marketing, mining, browser optimization, and social media. Could you be more specific about what aspect you'd like to explore?`;
+                }
+                
+                hideTyping();
+                
+                // Add Eliza's response
+                const meta = knowledgeSources > 0 ? 
+                    `Generated from ${knowledgeSources} autonomous cycles` : 
+                    'General knowledge response';
+                    
+                addMessage('eliza', elizaResponse, meta);
+                
+            } catch (error) {
+                hideTyping();
+                addMessage('eliza', `I'm experiencing some technical difficulties right now. My autonomous systems are working to resolve this. Please try again in a moment!`, 'System status: Recovering');
+                console.error('Error getting Eliza response:', error);
+            }
+        }
+
+        function classifyQuery(query) {
+            const queryLower = query.toLowerCase();
+            
+            if (queryLower.includes('develop') || queryLower.includes('code') || queryLower.includes('programming')) {
+                return 'development';
+            } else if (queryLower.includes('analytic') || queryLower.includes('data') || queryLower.includes('metric')) {
+                return 'analytics';
+            } else if (queryLower.includes('market') || queryLower.includes('growth') || queryLower.includes('user')) {
+                return 'marketing';
+            } else if (queryLower.includes('mining') || queryLower.includes('pool') || queryLower.includes('hash')) {
+                return 'mining';
+            } else if (queryLower.includes('browser') || queryLower.includes('interface') || queryLower.includes('ui')) {
+                return 'browser';
+            } else if (queryLower.includes('social') || queryLower.includes('community') || queryLower.includes('media')) {
+                return 'social_media';
+            } else {
+                return 'analytics'; // Default to analytics
+            }
+        }
+
+        async function fetchRelevantInsights(query, category) {
+            try {
+                // First try to search for specific terms
+                const searchTerms = extractSearchTerms(query);
+                let insights = [];
+                
+                for (const term of searchTerms.slice(0, 2)) { // Try top 2 terms
+                    const response = await fetch(`${API_BASE}/api/knowledge/search/${term}?limit=2`, {
+                        timeout: 10000
+                    });
+                    
+                    if (response.ok) {
+                        const results = await response.json();
+                        insights.push(...results);
+                    }
+                }
+                
+                // If no search results, try category-specific insights
+                if (insights.length === 0) {
+                    const response = await fetch(`${API_BASE}/api/knowledge/latest/${category}?limit=2`, {
+                        timeout: 10000
+                    });
+                    
+                    if (response.ok) {
+                        insights = await response.json();
+                    }
+                }
+                
+                return insights;
+                
+            } catch (error) {
+                console.error('Error fetching insights:', error);
+                return [];
+            }
+        }
+
+        function extractSearchTerms(query) {
+            const stopWords = ['the', 'is', 'at', 'which', 'on', 'and', 'a', 'to', 'are', 'as', 'how', 'what', 'can', 'you', 'me', 'about', 'tell'];
+            const words = query.toLowerCase().split(/\s+/);
+            return words.filter(word => word.length > 3 && !stopWords.includes(word));
+        }
+
+        // Test connection on load
+        window.addEventListener('load', async () => {
+            try {
+                const response = await fetch(`${API_BASE}/`);
+                if (response.ok) {
+                    console.log('✅ Connected to Eliza Knowledge Bridge');
+                } else {
+                    console.warn('⚠️ Connection issues with Knowledge Bridge');
+                }
+            } catch (error) {
+                console.error('❌ Failed to connect to Knowledge Bridge:', error);
+            }
+        });
+    </script>
+</body>
+</html>
