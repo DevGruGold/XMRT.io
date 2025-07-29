@@ -3,144 +3,285 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>XMRT.io - AI Agent Boardroom</title>
-    <link rel="stylesheet" href="styles.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <title>XMRT.io - Eliza AI Assistant</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            padding: 40px;
+            text-align: center;
+            max-width: 600px;
+            width: 100%;
+        }
+
+        .logo {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 16px;
+        }
+
+        .status {
+            background: #10b981;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            display: inline-block;
+            margin-bottom: 30px;
+            font-weight: bold;
+        }
+
+        .options {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .option {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 20px 30px;
+            border-radius: 15px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: transform 0.3s;
+            min-width: 200px;
+        }
+
+        .option:hover {
+            transform: translateY(-5px);
+        }
+
+        .option h3 {
+            margin-bottom: 10px;
+            font-size: 18px;
+        }
+
+        .option p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .stats {
+            margin-top: 40px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            color: #666;
+        }
+
+        @media (max-width: 768px) {
+            .options {
+                flex-direction: column;
+            }
+            
+            .container {
+                padding: 20px;
+            }
+            
+            h1 {
+                font-size: 24px;
+            }
+        }
+    </style>
 </head>
 <body>
-    <div class="boardroom-container">
-        <!-- Header -->
-        <header class="boardroom-header">
-            <div class="logo">
-                <h1>XMRT.io</h1>
-                <span>AI Agent Boardroom</span>
-            </div>
-            <div class="status-indicator">
-                <div class="status-dot active"></div>
-                <span>All Agents Online</span>
-            </div>
-        </header>
-
-        <!-- Main Boardroom -->
-        <div class="boardroom-main">
-            <!-- Agent Circle -->
-            <div class="agent-circle">
-                <div class="center-table">
-                    <div class="table-surface">
-                        <div class="xmrt-logo">XMRT</div>
-                    </div>
-                </div>
-
-                <!-- Technical Agent -->
-                <div class="agent-seat" data-agent="Technical_Agent" style="--angle: 0deg;">
-                    <div class="agent-avatar technical">
-                        <i class="fas fa-code"></i>
-                        <div class="agent-status"></div>
-                    </div>
-                    <div class="agent-label">Technical Agent</div>
-                    <div class="agent-specialty">Code & APIs</div>
-                </div>
-
-                <!-- DAO Agent -->
-                <div class="agent-seat" data-agent="DAO_Agent" style="--angle: 72deg;">
-                    <div class="agent-avatar dao">
-                        <i class="fas fa-gavel"></i>
-                        <div class="agent-status"></div>
-                    </div>
-                    <div class="agent-label">DAO Agent</div>
-                    <div class="agent-specialty">Governance</div>
-                </div>
-
-                <!-- Mining Agent -->
-                <div class="agent-seat" data-agent="Mining_Agent" style="--angle: 144deg;">
-                    <div class="agent-avatar mining">
-                        <i class="fas fa-pickaxe"></i>
-                        <div class="agent-status"></div>
-                    </div>
-                    <div class="agent-label">Mining Agent</div>
-                    <div class="agent-specialty">Operations</div>
-                </div>
-
-                <!-- Marketing Agent -->
-                <div class="agent-seat" data-agent="Marketing_Agent" style="--angle: 216deg;">
-                    <div class="agent-avatar marketing">
-                        <i class="fas fa-bullhorn"></i>
-                        <div class="agent-status"></div>
-                    </div>
-                    <div class="agent-label">Marketing Agent</div>
-                    <div class="agent-specialty">Content & Growth</div>
-                </div>
-
-                <!-- General Agent -->
-                <div class="agent-seat" data-agent="General_Agent" style="--angle: 288deg;">
-                    <div class="agent-avatar general">
-                        <i class="fas fa-brain"></i>
-                        <div class="agent-status"></div>
-                    </div>
-                    <div class="agent-label">General Agent</div>
-                    <div class="agent-specialty">Assistant</div>
-                </div>
-            </div>
-
-            <!-- Chat Panel -->
-            <div class="chat-panel">
-                <div class="chat-header">
-                    <h3>Boardroom Discussion</h3>
-                    <div class="chat-controls">
-                        <button id="clearChat" class="btn-icon">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                        <button id="exportChat" class="btn-icon">
-                            <i class="fas fa-download"></i>
-                        </button>
-                    </div>
-                </div>
-                
-                <div class="chat-messages" id="chatMessages">
-                    <div class="system-message">
-                        <i class="fas fa-info-circle"></i>
-                        Welcome to the XMRT.io AI Boardroom. All agents are online and ready to collaborate.
-                    </div>
-                </div>
-
-                <div class="chat-input-container">
-                    <div class="input-wrapper">
-                        <input type="text" id="messageInput" placeholder="Ask the boardroom anything..." />
-                        <button id="sendMessage" class="send-btn">
-                            <i class="fas fa-paper-plane"></i>
-                        </button>
-                    </div>
-                    <div class="agent-selector">
-                        <label>Direct to:</label>
-                        <select id="agentSelector">
-                            <option value="auto">Auto-Route</option>
-                            <option value="Technical_Agent">Technical Agent</option>
-                            <option value="DAO_Agent">DAO Agent</option>
-                            <option value="Mining_Agent">Mining Agent</option>
-                            <option value="Marketing_Agent">Marketing Agent</option>
-                            <option value="General_Agent">General Agent</option>
-                            <option value="all">All Agents</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
+    <div class="container">
+        <div class="logo">🤖</div>
+        <h1>XMRT.io - Eliza AI Assistant</h1>
+        <p class="subtitle">Powered by 739+ autonomous learning cycles</p>
+        
+        <div class="status">
+            ✅ System Operational
         </div>
-
-        <!-- Agent Details Panel -->
-        <div class="agent-details" id="agentDetails">
-            <div class="details-header">
-                <h3 id="detailsTitle">Select an Agent</h3>
-                <button id="closeDetails" class="btn-icon">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div class="details-content" id="detailsContent">
-                <p>Click on any agent around the boardroom to see their capabilities and recent activity.</p>
-            </div>
+        
+        <div class="options">
+            <a href="#" class="option" onclick="startChat()">
+                <h3>💬 Chat with Eliza</h3>
+                <p>Interactive conversation interface</p>
+            </a>
+            
+            <a href="/api/knowledge/stats" class="option">
+                <h3>📊 Knowledge Stats</h3>
+                <p>View autonomous learning data</p>
+            </a>
+        </div>
+        
+        <div class="stats">
+            <strong>🧠 System Capabilities:</strong><br>
+            ✨ 739+ autonomous learning cycles<br>
+            🎯 6 specialized knowledge domains<br>
+            ⚡ Sub-second response times<br>
+            🔍 Real-time knowledge search<br>
         </div>
     </div>
 
-    <script src="script.js"></script>
+    <script>
+        function startChat() {
+            // Create the chat interface dynamically
+            document.body.innerHTML = `
+                <div style="width: 100%; height: 100vh; display: flex; justify-content: center; align-items: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                    <div style="width: 90%; max-width: 800px; height: 90vh; background: white; border-radius: 20px; box-shadow: 0 20px 40px rgba(0,0,0,0.1); display: flex; flex-direction: column; overflow: hidden;">
+                        
+                        <div style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; padding: 20px; text-align: center;">
+                            <h1 style="font-size: 24px; margin-bottom: 5px;">
+                                <span style="display: inline-block; width: 10px; height: 10px; background: #4ade80; border-radius: 50%; margin-right: 8px; animation: pulse 2s infinite;"></span>
+                                Eliza - XMRT AI Assistant
+                            </h1>
+                            <p style="opacity: 0.9; font-size: 14px;">Powered by 739+ autonomous learning cycles</p>
+                        </div>
+                        
+                        <div id="chatMessages" style="flex: 1; padding: 20px; overflow-y: auto; background: #f8fafc;">
+                            <div style="text-align: center; color: #64748b; font-size: 14px; margin: 20px 0; padding: 10px; background: #f1f5f9; border-radius: 10px;">
+                                🤖 Eliza is online and ready to chat! She has access to 739+ autonomous learning cycles.
+                            </div>
+                            
+                            <div style="margin-bottom: 20px; display: flex; align-items: flex-start;">
+                                <div style="width: 40px; height: 40px; border-radius: 50%; margin-right: 10px; display: flex; align-items: center; justify-content: center; font-weight: bold; color: white; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">🤖</div>
+                                <div style="max-width: 70%; padding: 15px 20px; border-radius: 20px; background: white; border: 2px solid #e2e8f0; color: #334155;">
+                                    Hello! I'm Eliza, your XMRT AI assistant. I have access to 739+ autonomous learning cycles covering analytics, development, marketing, mining, browser optimization, and social media insights. What would you like to know?
+                                    <div style="font-size: 11px; opacity: 0.7; margin-top: 5px;">Connected to autonomous knowledge base</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div style="padding: 20px; background: white; border-top: 1px solid #e2e8f0;">
+                            <div style="display: flex; gap: 10px;">
+                                <input type="text" id="chatInput" placeholder="Ask me about development, analytics, marketing, or anything else..." style="flex: 1; padding: 15px 20px; border: 2px solid #e2e8f0; border-radius: 25px; font-size: 16px; outline: none;">
+                                <button onclick="sendMessage()" style="padding: 15px 25px; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; border: none; border-radius: 25px; cursor: pointer; font-weight: bold;">Send</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <style>
+                    @keyframes pulse {
+                        0% { opacity: 1; }
+                        50% { opacity: 0.5; }
+                        100% { opacity: 1; }
+                    }
+                </style>
+            `;
+            
+            // Add chat functionality
+            document.getElementById('chatInput').focus();
+            
+            document.getElementById('chatInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    sendMessage();
+                }
+            });
+        }
+        
+        async function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+            if (!message) return;
+            
+            const chatMessages = document.getElementById('chatMessages');
+            
+            // Add user message
+            chatMessages.innerHTML += \`
+                <div style="margin-bottom: 20px; display: flex; align-items: flex-start; justify-content: flex-end;">
+                    <div style="max-width: 70%; padding: 15px 20px; border-radius: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                        \${message}
+                    </div>
+                    <div style="width: 40px; height: 40px; border-radius: 50%; margin-left: 10px; display: flex; align-items: center; justify-content: center; font-weight: bold; color: white; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">👤</div>
+                </div>
+            \`;
+            
+            input.value = '';
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            
+            // Get Eliza's response
+            try {
+                const category = classifyQuery(message);
+                const response = await fetch(\`/api/knowledge/latest/\${category}?limit=1\`);
+                
+                let elizaResponse = "I'm processing your request...";
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data && data.length > 0) {
+                        const insight = data[0];
+                        elizaResponse = \`Based on my autonomous analysis from cycle #\${insight.cycle || 'N/A'}: \${insight.content || 'Processing...'}\`;
+                    }
+                }
+                
+                // Add Eliza's response
+                chatMessages.innerHTML += \`
+                    <div style="margin-bottom: 20px; display: flex; align-items: flex-start;">
+                        <div style="width: 40px; height: 40px; border-radius: 50%; margin-right: 10px; display: flex; align-items: center; justify-content: center; font-weight: bold; color: white; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">🤖</div>
+                        <div style="max-width: 70%; padding: 15px 20px; border-radius: 20px; background: white; border: 2px solid #e2e8f0; color: #334155;">
+                            \${elizaResponse}
+                            <div style="font-size: 11px; opacity: 0.7; margin-top: 5px;">Generated from autonomous insights</div>
+                        </div>
+                    </div>
+                \`;
+                
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+                
+            } catch (error) {
+                chatMessages.innerHTML += \`
+                    <div style="margin-bottom: 20px; display: flex; align-items: flex-start;">
+                        <div style="width: 40px; height: 40px; border-radius: 50%; margin-right: 10px; display: flex; align-items: center; justify-content: center; font-weight: bold; color: white; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">🤖</div>
+                        <div style="max-width: 70%; padding: 15px 20px; border-radius: 20px; background: white; border: 2px solid #e2e8f0; color: #334155;">
+                            I'm experiencing some technical difficulties. My autonomous systems are working to resolve this!
+                            <div style="font-size: 11px; opacity: 0.7; margin-top: 5px;">System status: Recovering</div>
+                        </div>
+                    </div>
+                \`;
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+        }
+        
+        function classifyQuery(query) {
+            const queryLower = query.toLowerCase();
+            
+            if (queryLower.includes('develop') || queryLower.includes('code')) {
+                return 'development';
+            } else if (queryLower.includes('analytic') || queryLower.includes('data')) {
+                return 'analytics';
+            } else if (queryLower.includes('market') || queryLower.includes('growth')) {
+                return 'marketing';
+            } else if (queryLower.includes('mining')) {
+                return 'mining';
+            } else if (queryLower.includes('browser') || queryLower.includes('interface')) {
+                return 'browser';
+            } else if (queryLower.includes('social') || queryLower.includes('community')) {
+                return 'social_media';
+            } else {
+                return 'analytics';
+            }
+        }
+    </script>
 </body>
 </html>
