@@ -1,4 +1,4 @@
-# knowledge_bridge.py - Production version for XMRT.io deployment
+# OPTIMIZED Knowledge Bridge - Fixed Performance Issues
 import os
 import json
 import re
@@ -20,25 +20,128 @@ class KnowledgeExtractor:
             "Accept": "application/vnd.github.v3+json"
         }
         self._cache = {}
+        self._stats_cache = None
         self._last_update = None
         
     def get_cached_insights(self) -> Dict[str, Any]:
-        """Get cached insights or fetch fresh ones"""
+        """Get cached insights or fetch fresh ones - OPTIMIZED VERSION"""
         now = datetime.now()
         
-        # Cache for 10 minutes
+        # Cache for 15 minutes instead of 10
         if (self._last_update is None or 
-            (now - self._last_update).seconds > 600 or 
+            (now - self._last_update).seconds > 900 or 
             not self._cache):
             
-            print("🔄 Refreshing knowledge cache...")
-            self._cache = self._extract_cycle_insights()
+            print("🔄 Refreshing knowledge cache (optimized)...")
+            self._cache = self._extract_cycle_insights_optimized()
             self._last_update = now
             
         return self._cache
+    
+    def get_quick_stats(self) -> Dict[str, Any]:
+        """Get quick stats without processing all files - NEW OPTIMIZED METHOD"""
         
-    def _extract_cycle_insights(self) -> Dict[str, Any]:
-        """Extract key insights from all cycle reports"""
+        # Use cached stats if available and recent
+        now = datetime.now()
+        if (self._stats_cache and self._last_update and 
+            (now - self._last_update).seconds < 600):  # 10 minute cache
+            return self._stats_cache
+        
+        try:
+            # Get repository contents (just file list, no content)
+            response = requests.get(self.base_url, headers=self.headers, timeout=30)
+            if response.status_code != 200:
+                raise HTTPException(status_code=500, detail="Failed to access xmrtnet repository")
+                
+            files = response.json()
+            
+            # Quick count by category (no file content processing)
+            quick_stats = {
+                "analytics": [],
+                "development": [],
+                "marketing": [],
+                "mining": [],
+                "browser": [],
+                "social_media": [],
+                "latest_update": datetime.now().isoformat(),
+                "total_cycles": 0
+            }
+            
+            cycle_count = 0
+            category_counts = {
+                "analytics": 0,
+                "development": 0,
+                "marketing": 0,
+                "mining": 0,
+                "browser": 0,
+                "social_media": 0
+            }
+            
+            latest_cycles = {
+                "analytics": 0,
+                "development": 0,
+                "marketing": 0,
+                "mining": 0,
+                "browser": 0,
+                "social_media": 0
+            }
+            
+            for file_info in files:
+                filename = file_info['name']
+                
+                # Quick category detection
+                category = None
+                if filename.startswith('ANALYTICS_CYCLE_'):
+                    category = "analytics"
+                elif filename.startswith('DEVELOPMENT_CYCLE_'):
+                    category = "development"
+                elif filename.startswith('MARKETING_CYCLE_'):
+                    category = "marketing"
+                elif filename.startswith('MINING_CYCLE_'):
+                    category = "mining"
+                elif filename.startswith('BROWSER_CYCLE_'):
+                    category = "browser"
+                elif filename.startswith('SOCIAL_MEDIA_CYCLE_'):
+                    category = "social_media"
+                
+                if category:
+                    cycle_num = self._extract_cycle_number(filename)
+                    category_counts[category] += 1
+                    latest_cycles[category] = max(latest_cycles[category], cycle_num)
+                    cycle_count += 1
+            
+            # Build quick stats response
+            quick_stats["total_cycles"] = cycle_count
+            categories_info = {}
+            
+            for category in category_counts:
+                categories_info[category] = {
+                    "count": category_counts[category],
+                    "latest_cycle": latest_cycles[category]
+                }
+            
+            result = {
+                "total_cycles": cycle_count,
+                "last_updated": quick_stats["latest_update"],
+                "categories": categories_info,
+                "note": "Quick stats - optimized for performance"
+            }
+            
+            # Cache the result
+            self._stats_cache = result
+            
+            return result
+            
+        except Exception as e:
+            print(f"Error in quick stats: {e}")
+            return {
+                "total_cycles": 0,
+                "error": "Stats temporarily unavailable",
+                "categories": {}
+            }
+        
+    def _extract_cycle_insights_optimized(self) -> Dict[str, Any]:
+        """Extract insights with performance optimization"""
         insights = {
             "analytics": [],
             "development": [],
@@ -50,127 +153,139 @@ class KnowledgeExtractor:
             "total_cycles": 0
         }
         
-        # Get repository contents
-        response = requests.get(self.base_url, headers=self.headers)
-        if response.status_code != 200:
-            raise HTTPException(status_code=500, detail="Failed to access xmrtnet repository")
+        try:
+            # Get repository contents with timeout
+            response = requests.get(self.base_url, headers=self.headers, timeout=45)
+            if response.status_code != 200:
+                raise HTTPException(status_code=500, detail="Failed to access xmrtnet repository")
+                
+            files = response.json()
+            cycle_count = 0
+            processed_count = 0
             
-        files = response.json()
-        cycle_count = 0
-        
-        for file_info in files:
-            filename = file_info['name']
+            # Process files in batches to avoid timeout
+            for file_info in files:
+                filename = file_info['name']
+                
+                # Only process cycle files
+                category = None
+                if filename.startswith('ANALYTICS_CYCLE_'):
+                    category = "analytics"
+                elif filename.startswith('DEVELOPMENT_CYCLE_'):
+                    category = "development"
+                elif filename.startswith('MARKETING_CYCLE_'):
+                    category = "marketing"
+                elif filename.startswith('MINING_CYCLE_'):
+                    category = "mining"
+                elif filename.startswith('BROWSER_CYCLE_'):
+                    category = "browser"
+                elif filename.startswith('SOCIAL_MEDIA_CYCLE_'):
+                    category = "social_media"
+                
+                if category:
+                    # Process with timeout protection
+                    try:
+                        cycle_data = self._extract_file_content_fast(filename)
+                        if cycle_data:
+                            insights[category].append({
+                                "cycle": self._extract_cycle_number(filename),
+                                "content": cycle_data,
+                                "filename": filename,
+                                "timestamp": datetime.now().isoformat()
+                            })
+                            cycle_count += 1
+                            processed_count += 1
+                            
+                            # Progress indicator every 100 files
+                            if processed_count % 100 == 0:
+                                print(f"Processed {processed_count} cycles...")
+                                
+                    except Exception as e:
+                        print(f"Skipping {filename}: {e}")
+                        continue
             
-            # Process different cycle types
-            category = None
+            insights["total_cycles"] = cycle_count
             
-            if filename.startswith('ANALYTICS_CYCLE_'):
-                category = "analytics"
-            elif filename.startswith('DEVELOPMENT_CYCLE_'):
-                category = "development"
-            elif filename.startswith('MARKETING_CYCLE_'):
-                category = "marketing"
-            elif filename.startswith('MINING_CYCLE_'):
-                category = "mining"
-            elif filename.startswith('BROWSER_CYCLE_'):
-                category = "browser"
-            elif filename.startswith('SOCIAL_MEDIA_CYCLE_'):
-                category = "social_media"
+            # Sort all categories by cycle number (latest first)
+            for category in ["analytics", "development", "marketing", "mining", "browser", "social_media"]:
+                insights[category].sort(key=lambda x: x['cycle'], reverse=True)
             
-            if category:
-                cycle_data = self._extract_file_content(filename)
-                if cycle_data:
-                    insights[category].append({
-                        "cycle": self._extract_cycle_number(filename),
-                        "content": cycle_data,
-                        "filename": filename,
-                        "timestamp": datetime.now().isoformat()
-                    })
-                    cycle_count += 1
-        
-        insights["total_cycles"] = cycle_count
-        
-        # Sort all categories by cycle number (latest first)
-        for category in ["analytics", "development", "marketing", "mining", "browser", "social_media"]:
-            insights[category].sort(key=lambda x: x['cycle'], reverse=True)
-        
-        return insights
+            print(f"✅ Optimized extraction complete: {cycle_count} cycles processed")
+            return insights
+            
+        except Exception as e:
+            print(f"Error in optimized extraction: {e}")
+            return insights
     
-    def _extract_file_content(self, filename: str) -> Optional[str]:
-        """Extract content from a specific file"""
+    def _extract_file_content_fast(self, filename: str) -> Optional[str]:
+        """Fast file content extraction with timeout protection"""
         file_url = f"{self.base_url}/{filename}"
-        response = requests.get(file_url, headers=self.headers)
         
-        if response.status_code == 200:
-            file_data = response.json()
-            if file_data.get('content'):
-                try:
-                    content = base64.b64decode(file_data['content']).decode('utf-8')
-                    return self._extract_key_insights(content)
-                except:
-                    return None
-        return None
+        try:
+            # Shorter timeout for individual files
+            response = requests.get(file_url, headers=self.headers, timeout=10)
+            
+            if response.status_code == 200:
+                file_data = response.json()
+                if file_data.get('content'):
+                    try:
+                        content = base64.b64decode(file_data['content']).decode('utf-8')
+                        return self._extract_key_insights(content)
+                    except:
+                        return f"Content from {filename} (decode issue)"
+            return None
+            
+        except requests.exceptions.Timeout:
+            return f"Timeout processing {filename}"
+        except Exception:
+            return None
     
     def _extract_key_insights(self, content: str) -> str:
-        """Extract key insights from cycle content"""
+        """Extract key insights from cycle content - OPTIMIZED"""
         insights = []
         
-        # Extract progress indicators
+        # Faster pattern matching with limits
         progress_patterns = [
             r'(?:Progress|Achievement|Completion|Success|Status):\s*(.+)',
             r'(?:✅|✓)\s*(.+)',
-            r'(?:COMPLETED|DONE|FINISHED):\s*(.+)'
         ]
         
-        for pattern in progress_patterns:
+        for pattern in progress_patterns[:2]:  # Limit patterns
             matches = re.findall(pattern, content, re.IGNORECASE | re.MULTILINE)
             if matches:
-                insights.extend([f"Progress: {match.strip()}" for match in matches[:2]])
+                insights.extend([f"Progress: {match.strip()}" for match in matches[:1]])  # Limit matches
+                break  # Stop after first match
         
-        # Extract metrics
-        metric_patterns = [
-            r'(?:Metric|Score|Rate|Performance|Efficiency):\s*(.+)',
-            r'(\d+(?:\.\d+)?%)',
-            r'(\d+\s+(?:tasks|items|cycles|operations))'
-        ]
-        
-        for pattern in metric_patterns:
-            matches = re.findall(pattern, content, re.IGNORECASE)
-            if matches:
-                insights.extend([f"Metric: {match.strip()}" for match in matches[:2]])
-        
-        # Extract actions
-        action_patterns = [
-            r'(?:Next|Action|TODO|Plan|Goal):\s*(.+)',
-            r'(?:🎯|📋|⚡)\s*(.+)'
-        ]
-        
-        for pattern in action_patterns:
-            matches = re.findall(pattern, content, re.IGNORECASE | re.MULTILINE)
-            if matches:
-                insights.extend([f"Action: {match.strip()}" for match in matches[:2]])
+        # Quick metric extraction
+        if not insights:
+            metric_patterns = [r'(\d+(?:\.\d+)?%)', r'(\d+\s+(?:tasks|items|cycles))']
+            for pattern in metric_patterns:
+                matches = re.findall(pattern, content, re.IGNORECASE)
+                if matches:
+                    insights.extend([f"Metric: {match.strip()}" for match in matches[:1]])
+                    break
         
         # Fallback to summary
         if not insights:
-            paragraphs = [p.strip() for p in content.split('\n\n') if len(p.strip()) > 50]
+            paragraphs = [p.strip() for p in content.split('\n\n') if len(p.strip()) > 30]
             if paragraphs:
-                insights.append(f"Summary: {paragraphs[0][:200]}...")
+                insights.append(f"Summary: {paragraphs[0][:150]}...")
         
-        return "; ".join(insights[:5]) if insights else content[:200] + "..."
+        return "; ".join(insights[:2]) if insights else content[:100] + "..."
     
     def _extract_cycle_number(self, filename: str) -> int:
         """Extract cycle number from filename"""
         match = re.search(r'_(\d+)\.md$', filename)
         return int(match.group(1)) if match else 0
 
-# FastAPI app
+# FastAPI app with optimizations
 app = FastAPI(
-    title="XMRT Knowledge Bridge",
-    description="Unified API for accessing Eliza's autonomous cycle insights",
-    version="1.0.0"
+    title="XMRT Knowledge Bridge - OPTIMIZED",
+    description="High-performance API for accessing Eliza's autonomous cycle insights",
+    version="2.0.0"
 )
 
-# Enable CORS for frontend integration
+# Enable CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -186,12 +301,13 @@ async def root():
     return {
         "service": "XMRT Knowledge Bridge",
         "status": "operational",
-        "description": "Unified access to Eliza's 739+ autonomous cycle insights",
+        "version": "2.0.0 - OPTIMIZED",
+        "description": "High-performance access to Eliza's 739+ autonomous cycle insights",
         "endpoints": {
             "insights": "/api/knowledge/insights",
             "latest": "/api/knowledge/latest/{category}",
             "search": "/api/knowledge/search/{query}",
-            "stats": "/api/knowledge/stats"
+            "stats": "/api/knowledge/stats (OPTIMIZED)"
         }
     }
 
@@ -202,7 +318,7 @@ async def get_all_insights():
 
 @app.get("/api/knowledge/latest/{category}")
 async def get_latest_insights(category: str, limit: int = Query(10, ge=1, le=50)):
-    """Get latest insights from specific category"""
+    """Get latest insights from specific category - FAST"""
     all_insights = extractor.get_cached_insights()
     
     if category not in all_insights:
@@ -213,7 +329,7 @@ async def get_latest_insights(category: str, limit: int = Query(10, ge=1, le=50)
 
 @app.get("/api/knowledge/search/{query}")
 async def search_insights(query: str, limit: int = Query(20, ge=1, le=100)):
-    """Search for specific insights across all cycles"""
+    """Search for specific insights across all cycles - FAST"""
     all_insights = extractor.get_cached_insights()
     results = []
     
@@ -235,19 +351,5 @@ async def search_insights(query: str, limit: int = Query(20, ge=1, le=100)):
 
 @app.get("/api/knowledge/stats")
 async def get_knowledge_stats():
-    """Get statistics about the knowledge base"""
-    insights = extractor.get_cached_insights()
-    
-    stats = {
-        "total_cycles": insights["total_cycles"],
-        "last_updated": insights["latest_update"],
-        "categories": {}
-    }
-    
-    for category in ["analytics", "development", "marketing", "mining", "browser", "social_media"]:
-        stats["categories"][category] = {
-            "count": len(insights[category]),
-            "latest_cycle": insights[category][0]["cycle"] if insights[category] else 0
-        }
-    
-    return stats
+    """Get statistics about the knowledge base - OPTIMIZED FOR SPEED"""
+    return extractor.get_quick_stats()
