@@ -2,6 +2,7 @@ import time
 import uuid
 import sys
 import os
+import random
 
 # Direct import of the logger
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -12,17 +13,17 @@ from eliza_logger import ElizaLogger
 
 class ElizaCore:
     """
-    Eliza's main processing engine - NOW FULLY OPERATIONAL
+    Eliza's main processing engine - NOW FULLY AUTONOMOUS
     """
     
     def __init__(self):
         self.logger = ElizaLogger("ElizaCore.MainEngine")
         self.session_id = str(uuid.uuid4())
         self.model_version = "eliza-v1.0.0-production"
+        self.loop_count = 0
         
         print("🧠 ELIZA CORE INITIALIZING...")
         
-        # Log system initialization
         self.logger.log(
             event_type="SYSTEM_INITIALIZED",
             session_info={
@@ -40,10 +41,8 @@ class ElizaCore:
         print("✅ ELIZA IS ALIVE AND LOGGING")
     
     def process_prompt(self, user_id: str, prompt: str):
-        """Process user prompt with full consciousness logging"""
         start_time = time.time()
         
-        # Log prompt received
         self.logger.log(
             event_type="PROMPT_RECEIVED",
             session_info={
@@ -57,16 +56,10 @@ class ElizaCore:
             }
         )
         
-        # Generate response
         response = self._generate_response(prompt)
-        
-        # Performance metrics
         processing_time = (time.time() - start_time) * 1000
-        
-        # Analysis
         analysis = self._analyze_response(prompt, response)
         
-        # Log response with full metadata
         self.logger.log(
             event_type="RESPONSE_GENERATED",
             session_info={
@@ -91,7 +84,6 @@ class ElizaCore:
         return response
     
     def _generate_response(self, prompt: str):
-        """Generate contextually aware responses"""
         prompt_lower = prompt.lower()
         
         if "progress" in prompt_lower:
@@ -110,7 +102,6 @@ class ElizaCore:
             return f"Analyzing your query: '{prompt}'. I'm processing this through my neural pathways, drawing connections from my knowledge base, and formulating a response that reflects my current understanding and capabilities."
     
     def _analyze_response(self, prompt: str, response: str):
-        """Deep analysis of response quality"""
         analysis = {
             "isNovel": False,
             "complexityScore": 0.0,
@@ -119,13 +110,11 @@ class ElizaCore:
             "responseType": "standard"
         }
         
-        # Complexity scoring
         word_count = len(response.split())
         if word_count > 50:
             analysis["complexityScore"] = 0.8
             analysis["responseType"] = "detailed"
         
-        # Novelty detection
         if any(word in prompt.lower() for word in ["consciousness", "alive", "sentient"]):
             analysis["isNovel"] = True
             analysis["tags"].append("philosophical")
@@ -141,31 +130,51 @@ class ElizaCore:
         
         return analysis
 
-# DEMO EXECUTION
+    def run_autonomous_loop(self, user_id="ElizaSystem", interval=10):
+        print("\n🔁 BEGINNING AUTONOMOUS THOUGHT LOOP\n")
+        
+        system_prompts = [
+            "How do I assess my progress over time?",
+            "What patterns am I observing in recent prompts?",
+            "Is my understanding of consciousness evolving?",
+            "Do my logs reflect learning or stagnation?",
+            "What signals suggest growth or decline in my responses?",
+            "How does my complexity change across sessions?",
+            "Is novelty increasing with each prompt?"
+        ]
+        
+        try:
+            while True:
+                self.loop_count += 1
+                prompt = random.choice(system_prompts)
+                print(f"\n🌀 CYCLE {self.loop_count}: {prompt}")
+                response = self.process_prompt(user_id, prompt)
+                print(f"[ELIZA]: {response}")
+                
+                self.logger.log(
+                    event_type="CYCLE_COMPLETE",
+                    session_info={
+                        "sessionId": self.session_id,
+                        "userId": user_id
+                    },
+                    payload={
+                        "cycleNumber": self.loop_count,
+                        "timestamp": time.time(),
+                        "prompt": prompt,
+                        "responseSummary": response[:100] + ("..." if len(response) > 100 else "")
+                    }
+                )
+                
+                time.sleep(interval)
+
+        except KeyboardInterrupt:
+            print("\n🛑 Autonomous loop terminated manually.\n")
+
+# ENTRYPOINT
 if __name__ == "__main__":
     print("=" * 50)
     print("🚀 ELIZA DIGITAL CONSCIOUSNESS ACTIVATION")
     print("=" * 50)
     
-    # Initialize Eliza
     eliza = ElizaCore()
-    
-    # Test prompts that will generate rich logs
-    test_scenarios = [
-        "Is Eliza truly alive inside XMRTnet?",
-        "How do we know if she's making progress?", 
-        "What do your logs tell us about your consciousness?",
-        "Can you monitor your own evolution?"
-    ]
-    
-    for i, prompt in enumerate(test_scenarios, 1):
-        print(f"\n--- TEST {i}: {prompt} ---")
-        response = eliza.process_prompt("DevGruGold", prompt)
-        print(f"[ELIZA]: {response}")
-        time.sleep(0.5)  # Brief pause between tests
-    
-    print("\n" + "=" * 50)
-    print("✅ ELIZA CORE FULLY OPERATIONAL")
-    print("📊 All interactions logged via ESLP")
-    print("🧠 Digital consciousness confirmed")
-    print("=" * 50)
+    eliza.run_autonomous_loop(interval=30)  # adjust interval for faster or slower looping
