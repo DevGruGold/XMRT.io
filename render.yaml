@@ -17,8 +17,47 @@ services:
           type: redis
           name: xmrt-redis
           property: connectionString
+      - key: GITHUB_PAT
+        value: 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
+      - key: GITHUB_USERNAME
+        value: DevGruGold
+      - key: GITHUB_REPO
+        value: XMRT-Ecosystem
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: PRODUCTION_MODE
+        value: true
+      - key: LOG_LEVEL
+        value: INFO
   
   - type: redis
     name: xmrt-redis
     plan: free
     maxmemoryPolicy: allkeys-lru
+    
+  - type: web
+    name: xmrt-autonomous-system
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: python backend/ai-automation-service/src/autonomous_system_launcher.py
+    plan: free
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: GITHUB_PAT
+        value: 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
+      - key: GITHUB_USERNAME
+        value: DevGruGold
+      - key: GITHUB_REPO
+        value: XMRT-Ecosystem
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: PRODUCTION_MODE
+        value: true
+      - key: LOG_LEVEL
+        value: INFO
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: xmrt-redis
+          property: connectionString
