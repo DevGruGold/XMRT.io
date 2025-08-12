@@ -3,7 +3,7 @@ services:
     name: xmrt-boardroom
     env: python
     buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn --worker-class eventlet -w 1 --bind 0.0.0.0:$PORT xmrt_boardroom_app:app
+    startCommand: gunicorn --worker-class eventlet -w 1 --bind 0.0.0.0:$PORT app:app
     plan: free
     envVars:
       - key: PYTHON_VERSION
@@ -22,4 +22,3 @@ services:
     name: xmrt-redis
     plan: free
     maxmemoryPolicy: allkeys-lru
-
