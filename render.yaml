@@ -1,13 +1,25 @@
 services:
   - type: web
-    name: xmrt-knowledge-bridge
+    name: xmrt-boardroom
     env: python
-    region: oregon
-    plan: free
     buildCommand: pip install -r requirements.txt
-    startCommand: python server.py
+    startCommand: gunicorn --worker-class eventlet -w 1 --bind 0.0.0.0:$PORT xmrt_boardroom_app:app
+    plan: free
     envVars:
-      - key: GITHUB_TOKEN
-        value: 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
-      - key: GITHUB_USERNAME
-        value: DevGruGold
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: FLASK_ENV
+        value: production
+      - key: SECRET_KEY
+        generateValue: true
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: xmrt-redis
+          property: connectionString
+  
+  - type: redis
+    name: xmrt-redis
+    plan: free
+    maxmemoryPolicy: allkeys-lru
+
