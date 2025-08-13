@@ -283,5 +283,23 @@
             }
         }
     </script>
+
+    <!-- Ecosystem Activity Widget -->
+    <div class="card">
+        <h3>🌐 Ecosystem Activity</h3>
+        <div id="xmrt-activity-widget"></div>
+    </div>
+    
+    <script src="/static/real_time_activity_widget.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const widget = new XMRTEcosystemActivityWidget({
+                containerId: 'xmrt-activity-widget',
+                apiEndpoint: '/api/activity/feed',
+                updateInterval: 20000
+            });
+            widget.init();
+        });
+    </script>
 </body>
 </html>

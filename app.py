@@ -1,3 +1,6 @@
+from webhook_endpoints import create_ecosystem_webhook_blueprint
+import requests
+import time
 #!/usr/bin/env python3
 """
 XMRT Boardroom Flask Application - Fixed Version
@@ -33,6 +36,11 @@ ENABLE_GROWTH_SYSTEM = os.environ.get('ENABLE_GROWTH_SYSTEM', 'false').lower() =
 
 # Initialize Flask app
 app = Flask(__name__)
+
+# Register ecosystem webhook blueprint
+ecosystem_webhook_bp = create_ecosystem_webhook_blueprint()
+app.register_blueprint(ecosystem_webhook_bp)
+
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'xmrt-boardroom-secret-key')
 
 # Enable CORS for all routes
@@ -691,3 +699,69 @@ if __name__ == '__main__':
     # Run the Flask app
     port = int(os.environ.get('PORT', 5000))
     socketio.run(app, host='0.0.0.0', port=port, debug=False)
+
+def broadcast_boardroom_activity(event_type, data):
+    """Broadcast boardroom activities to ecosystem"""
+    try:
+        activity = {
+            "source_system": "boardroom",
+            "event_type": event_type,
+            "data": data,
+            "timestamp": datetime.now().isoformat(),
+            "event_id": f"boardroom_{event_type}_{int(time.time())}"
+        }
+        
+        ecosystem_endpoints = [
+            "https://xmrtnet-eliza.onrender.com/api/webhook/receive",
+            "https://xmrt-ecosystem-redis-langgraph.onrender.com/api/webhook/receive"
+        ]
+        
+        for endpoint in ecosystem_endpoints:
+            try:
+                requests.post(endpoint, json=activity, timeout=5)
+            except Exception as e:
+                print(f"Failed to broadcast to {endpoint}: {e}")
+                
+    except Exception as e:
+        print(f"Error broadcasting activity: {e}")
+
+@app.route('/api/activity/feed', methods=['GET'])
+def get_activity_feed():
+    """Get activity feed for ecosystem widget"""
+    try:
+        activities = []
+        
+        # Add growth metrics activity
+        if 'eliza_growth' in globals() and eliza_growth:
+            try:
+                assessment = eliza_growth.assess_current_state()
+                activities.append({
+                    "id": f"growth_{int(time.time())}",
+                    "title": "📈 Growth Metrics Updated",
+                    "description": f"Overall health: {assessment.get('overall_health', 'Unknown')}",
+                    "source": "boardroom",
+                    "timestamp": datetime.utcnow().isoformat(),
+                    "type": "growth_update",
+                    "data": assessment
+                })
+            except:
+                pass
+        
+        # Add system status activity
+        activities.append({
+            "id": f"status_{int(time.time())}",
+            "title": "🏛️ Boardroom Status",
+            "description": "Orchestration hub operational and monitoring ecosystem",
+            "source": "boardroom", 
+            "timestamp": datetime.utcnow().isoformat(),
+            "type": "system_status",
+            "data": {"status": "operational"}
+        })
+        
+        return jsonify({
+            "success": True,
+            "activities": activities[-10:]
+        })
+        
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
