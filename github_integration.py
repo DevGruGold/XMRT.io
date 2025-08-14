@@ -247,7 +247,7 @@ from datetime import datetime
 GEMINI_ENABLED = initialize_gemini()
 
 # Initialize GitHub integration
-GITHUB_TOKEN = "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"
+GITHUB_TOKEN = "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"
 github_integration = XMRTGitHubIntegration(username="DevGruGold", token=GITHUB_TOKEN)
 
 async def enhanced_eliza_response(message, agent_id="eliza"):
@@ -509,7 +509,7 @@ if __name__ == "__main__":
                 },
                 "integration": {
                     "gemini_api": "GEMINI_API_KEY",
-                    "github_token": "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",
+                    "github_token": "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",
                     "veo3_integration": True,
                     "real_time_sync": True
                 }
@@ -596,7 +596,7 @@ def get_github_instance():
 if __name__ == "__main__":
     # Test the integration
     async def test_github():
-        token = "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"
+        token = "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"
         github = XMRTGitHubIntegration(username="DevGruGold", token=token)
         
         # Test health check
