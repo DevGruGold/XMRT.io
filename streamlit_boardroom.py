@@ -2,6 +2,7 @@ import streamlit as st
 import requests
 import json
 import time
+import pandas as pd
 from datetime import datetime
 
 # Page config with mobile optimization
@@ -345,6 +346,9 @@ AGENTS = {
 
 API_URL = 'https://xmrt-io.onrender.com/api/chat'
 STATUS_URL = 'https://xmrt-io.onrender.com/'
+# New endpoint for real-time activity (assuming the Streamlit app is deployed alongside the FastAPI server)
+# Since Streamlit runs on a different server than the FastAPI backend, we must use the external URL.
+MCP_ACTIVITY_URL = 'https://xmrt-io.onrender.com/api/mcp/activities' # Placeholder, will need to be configured on deployment
 
 def check_api_status():
     """Check if the API is online"""
@@ -416,7 +420,7 @@ elif st.session_state.api_status == 'offline':
     with col2:
         if st.button("⚡ Wake Server", type="primary", use_container_width=True):
             with st.spinner("Waking up the server... This may take 30-60 seconds"):
-                time.sleep(2)
+                # time.sleep(2) # Removed for faster wake-up
                 check_api_status()
                 st.rerun()
 
@@ -567,7 +571,7 @@ if st.button("📤 Send to Boardroom", type="primary", use_container_width=True)
                 else:
                     st.error(f"Error from {AGENTS[agent_id]['name']}: {response['error']}")
                 
-                time.sleep(0.5)
+                # time.sleep(0.5) # Removed for faster response
         else:
             # Send to single agent
             status_text.info("🤔 Agent is analyzing your request...")
@@ -585,7 +589,7 @@ if st.button("📤 Send to Boardroom", type="primary", use_container_width=True)
                 st.error(f"API Error: {response['error']}")
         
         # Clean up progress indicators
-        time.sleep(1.5)
+        # time.sleep(1.5) # Removed for faster response
         progress_bar.empty()
         status_text.empty()
         
@@ -606,7 +610,7 @@ with col1:
         st.session_state.chat_history = []
         st.session_state.active_agents = set()
         st.success("Boardroom cleared!")
-        time.sleep(1)
+        # time.sleep(1) # Removed for faster clear
         st.rerun()
 
 with col2:
@@ -627,6 +631,57 @@ with col3:
     if st.button("🔄 Refresh", use_container_width=True):
         check_api_status()
         st.rerun()
+
+
+# --- Real-Time Activity Section ---
+st.markdown("### ⚡ Real-Time mCP Activity Stream")
+
+def fetch_mcp_activities():
+    """Fetches the latest mCP activities from the backend."""
+    try:
+        # Use the external URL for the deployed service
+        response = requests.get(MCP_ACTIVITY_URL, timeout=5)
+        if response.status_code == 200:
+            return response.json()
+        else:
+            st.error(f"Failed to fetch mCP activities: Status {response.status_code}")
+            return []
+    except Exception as e:
+        st.error(f"Connection error fetching mCP activities: {e}")
+        return []
+
+mcp_activities = fetch_mcp_activities()
+
+if mcp_activities:
+    # Convert to DataFrame for a nice Streamlit table display
+    df = pd.DataFrame(mcp_activities)
+    df['timestamp'] = pd.to_datetime(df['timestamp']).dt.strftime('%H:%M:%S')
+    df = df[['timestamp', 'sender', 'topic', 'summary']]
+    df.columns = ['Time', 'Sender', 'Topic', 'Summary']
+    
+    st.dataframe(df, use_container_width=True, hide_index=True)
+else:
+    st.info("No real-time mCP activities to display yet. The server may be sleeping or the endpoint is not yet active.")
+
+# --- API Endpoint Documentation ---
+st.markdown("### 🔗 API Endpoints for mCP Testing")
+st.code(f"""
+# Health Check
+GET /api/mcp/health
+
+# Push Real-Time Activity
+POST /api/mcp/activity
+Body: {{
+    "sender": "mcp_server_id",
+    "recipient": "xmrt_io",
+    "topic": "system_update",
+    "payload": {{"summary": "New cycle completed", "data": ...}}
+}}
+
+# Test Command Execution
+POST /api/mcp/test_command
+Body: {{"command_name": "execute_task", "params": {{"task_id": 123}}}}
+""", language="http")
 
 # Footer
 st.markdown("---")

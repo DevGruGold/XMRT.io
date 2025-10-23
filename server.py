@@ -202,7 +202,9 @@ async def serve_chat_html():
 # Import and mount the Knowledge Bridge API
 try:
     from knowledge_bridge import app as knowledge_app
+from mcp_endpoints import mcp_router
     app.mount("/api", knowledge_app)
+app.include_router(mcp_router, prefix="/api")
     print("✅ Knowledge Bridge API mounted at /api")
 except ImportError:
     print("⚠️ Knowledge Bridge not found, creating basic API endpoints")
