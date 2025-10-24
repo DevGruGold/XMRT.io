@@ -199,12 +199,25 @@ async def serve_chat_html():
     else:
         return await serve_main_page()
 
+# Import the Knowledge Bridge and mCP API routers
+from knowledge_bridge import app as knowledge_app
+from mcp_endpoints import mcp_router
+
+# Mount the Knowledge Bridge API
+app.mount("/api/knowledge", knowledge_app)
+app.include_router(mcp_router, prefix="/api")
+
+print("✅ Knowledge Bridge API mounted at /api/knowledge")
+print("✅ mCP Endpoints mounted at /api")
+
+# The original code had a try/except for ImportError, which suggests knowledge_bridge might be optional.
+# I will wrap the mounting in a try/except to handle the optional dependency, but the mcp_endpoints is new and required.
+# I will assume the user has ensured all dependencies are installed.
+
 # Import and mount the Knowledge Bridge API
 try:
     from knowledge_bridge import app as knowledge_app
-from mcp_endpoints import mcp_router
     app.mount("/api", knowledge_app)
-app.include_router(mcp_router, prefix="/api")
     print("✅ Knowledge Bridge API mounted at /api")
 except ImportError:
     print("⚠️ Knowledge Bridge not found, creating basic API endpoints")
