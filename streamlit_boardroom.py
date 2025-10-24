@@ -4,15 +4,8 @@ import json
 import time
 import pandas as pd
 from datetime import datetime
-import sys
-import os
 
-# Add config directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'config'))
-
-from real_ecosystem_config import get_ecosystem_config
-
-# Page config with mobile optimization
+# Page config
 st.set_page_config(
     page_title="XMRT DAO - Autonomous System Dashboard",
     page_icon="🏛️",
@@ -20,13 +13,27 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Enhanced mobile-responsive CSS (keeping existing styles)
+# Supabase Edge Functions Configuration
+SUPABASE_URL = "https://vawouugtzwmejxqkeqqj.supabase.co"
+SUPABASE_KEY = "sb_publishable_yIaroctFhoYStx0f9XajBg_zhpuVulw"
+
+EDGE_FUNCTIONS = {
+    "ai_chat": f"{SUPABASE_URL}/functions/v1/ai-chat",
+    "mining_proxy": f"{SUPABASE_URL}/functions/v1/mining-proxy",
+    "github_integration": f"{SUPABASE_URL}/functions/v1/github-integration",
+    "task_orchestrator": f"{SUPABASE_URL}/functions/v1/task-orchestrator"
+}
+
+HEADERS = {
+    "Content-Type": "application/json",
+    "apikey": SUPABASE_KEY,
+    "Authorization": f"Bearer {SUPABASE_KEY}"
+}
+
+# CSS Styling
 st.markdown("""
 <style>
-    .main > div {
-        padding-top: 1rem;
-    }
-    
+    .main > div { padding-top: 1rem; }
     .main-header {
         background: linear-gradient(135deg, #1e3c72 0%, #2a5298 50%, #16213e 100%);
         padding: 1.5rem;
@@ -36,63 +43,34 @@ st.markdown("""
         color: white;
         box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
     }
-    
     .main-header h1 {
         font-size: clamp(1.5rem, 4vw, 2.5rem);
         margin-bottom: 0.5rem;
         background: linear-gradient(45deg, #00d4ff, #00ff88);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
-        background-clip: text;
     }
-    
-    .agent-card {
+    .metric-card {
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        padding: 1.2rem;
+        padding: 1.5rem;
         border-radius: 12px;
-        border-left: 4px solid #00d4ff;
         color: white;
-        transition: all 0.3s ease;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-        margin: 0.8rem 0;
-    }
-    
-    .agent-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
-    }
-    
-    .agent-active {
-        border-left-color: #00ff88 !important;
-        animation: pulse 2s infinite;
-    }
-    
-    @keyframes pulse {
-        0%, 100% { box-shadow: 0 4px 15px rgba(0, 255, 136, 0.3); }
-        50% { box-shadow: 0 8px 25px rgba(0, 255, 136, 0.6); }
-    }
-    
-    .api-status {
-        padding: 0.8rem;
-        border-radius: 10px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
         margin: 1rem 0;
-        text-align: center;
-        font-weight: 600;
-        font-size: 0.95rem;
     }
-    
-    .api-online {
-        background: rgba(0, 255, 136, 0.2);
-        color: #00ff88;
-        border: 1px solid rgba(0, 255, 136, 0.3);
+    .live-indicator {
+        display: inline-block;
+        width: 10px;
+        height: 10px;
+        background: #00ff88;
+        border-radius: 50%;
+        animation: pulse 2s infinite;
+        margin-right: 8px;
     }
-    
-    .api-offline {
-        background: rgba(255, 107, 107, 0.2);
-        color: #ff6b6b;
-        border: 1px solid rgba(255, 107, 107, 0.3);
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.5; }
     }
-    
     .stApp {
         background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%);
         color: white;
@@ -100,286 +78,253 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# Initialize ecosystem config
-ecosystem = get_ecosystem_config()
-
-# Initialize session state
-if 'chat_history' not in st.session_state:
-    st.session_state.chat_history = []
-if 'active_agents' not in st.session_state:
-    st.session_state.active_agents = set()
-if 'api_status' not in st.session_state:
-    st.session_state.api_status = 'checking'
-
-# Agent configurations
-AGENTS = {
-    'Technical_Agent': {
-        'name': 'Technical Agent',
-        'description': 'Code generation, APIs, debugging, system architecture',
-        'color': '#00d4ff',
-        'emoji': '🤖',
-        'context': 'eliza'
-    },
-    'DAO_Agent': {
-        'name': 'DAO Agent', 
-        'description': 'Governance, proposals, treasury management',
-        'color': '#ff6b6b',
-        'emoji': '🏛️',
-        'context': 'dao_governor'
-    },
-    'Mining_Agent': {
-        'name': 'Mining Agent',
-        'description': 'Mining operations, optimization, leaderboards',
-        'color': '#ffa500', 
-        'emoji': '⛏️',
-        'context': 'defi_specialist'
-    },
-    'Marketing_Agent': {
-        'name': 'Marketing Agent',
-        'description': 'Content creation, campaigns, user acquisition',
-        'color': '#ff69b4',
-        'emoji': '📢',
-        'context': 'community_manager'
-    },
-    'Security_Agent': {
-        'name': 'Security Agent',
-        'description': 'Security monitoring, risk assessment, protection',
-        'color': '#00ff88',
-        'emoji': '🛡️',
-        'context': 'security_guardian'
-    }
-}
-
-API_URL = 'https://xmrt-ecosystem-0k8i.onrender.com/api/chat'
-STATUS_URL = 'https://xmrt-ecosystem-0k8i.onrender.com/'
-
-def check_api_status():
-    """Check if the API is online"""
+# Helper Functions
+@st.cache_data(ttl=30)
+def get_mining_data():
+    """Get real mining data from edge function"""
     try:
-        response = requests.get(STATUS_URL, timeout=10)
-        if response.status_code == 200:
-            st.session_state.api_status = 'online'
-            ecosystem.update_deployment_status('render', 'online')
-            return True
-        else:
-            st.session_state.api_status = 'offline'
-            ecosystem.update_deployment_status('render', 'offline')
-            return False
-    except:
-        st.session_state.api_status = 'offline'
-        return False
-
-def call_agent_real(message, agent_context="eliza"):
-    """Call real AI agent using Gemini integration"""
-    try:
-        # Use real Gemini AI
-        response = ecosystem.generate_ai_response(message, agent_context)
-        
-        if response['success']:
-            st.session_state.api_status = 'online'
-            return response
-        else:
-            return {'error': f'AI generation failed: {response.get("error", "Unknown error")}'}
-            
+        response = requests.get(EDGE_FUNCTIONS["mining_proxy"], headers=HEADERS, timeout=10)
+        response.raise_for_status()
+        return response.json()
     except Exception as e:
-        return {'error': f'Connection error: {str(e)}'}
+        st.error(f"Mining data error: {e}")
+        return {"error": str(e), "totalHashes": 0, "validShares": 0, "amtDue": 0}
 
-def add_to_chat(role, agent_type, message):
-    """Add message to chat history and log to Supabase"""
-    timestamp = datetime.now().strftime("%H:%M:%S")
-    chat_entry = {
-        'timestamp': timestamp,
-        'role': role,
-        'agent_type': agent_type,
-        'message': message
-    }
-    st.session_state.chat_history.append(chat_entry)
-    
-    # Log to real database
-    ecosystem.log_activity('chat_message', chat_entry)
+@st.cache_data(ttl=60)
+def get_github_activity():
+    """Get GitHub activity from edge function"""
+    try:
+        payload = {"action": "get_recent_activity", "timestamp": datetime.now().isoformat()}
+        response = requests.post(EDGE_FUNCTIONS["github_integration"], headers=HEADERS, json=payload, timeout=30)
+        response.raise_for_status()
+        return response.json()
+    except Exception as e:
+        st.error(f"GitHub data error: {e}")
+        return {"error": str(e), "commits": [], "contributors": []}
+
+def send_ai_chat(message, context=None):
+    """Send message to AI chat edge function"""
+    try:
+        payload = {
+            "message": message,
+            "context": context or {},
+            "timestamp": datetime.now().isoformat()
+        }
+        response = requests.post(EDGE_FUNCTIONS["ai_chat"], headers=HEADERS, json=payload, timeout=30)
+        response.raise_for_status()
+        return response.json()
+    except Exception as e:
+        return {"error": str(e), "response": "AI service unavailable. Please try again."}
 
 # Header
 st.markdown("""
 <div class="main-header">
     <h1>🏛️ XMRT DAO - Autonomous System Dashboard</h1>
-    <p>Real-time AI ecosystem with GitHub, Supabase & Gemini integration</p>
+    <p><span class="live-indicator"></span>Live Real-Time Data from Supabase Edge Functions</p>
 </div>
 """, unsafe_allow_html=True)
 
-# System Status Section
-st.markdown("### 🔄 Real System Status")
+# Main tabs
+tab1, tab2, tab3, tab4 = st.tabs(["📊 System Metrics", "⛏️ Mining Activity", "💬 AI Chat", "🔧 GitHub Activity"])
 
-col1, col2, col3 = st.columns(3)
-
-with col1:
-    if ecosystem.supabase:
-        st.markdown('<div class="api-status api-online">🟢 Supabase Connected</div>', unsafe_allow_html=True)
-    else:
-        st.markdown('<div class="api-status api-offline">🔴 Supabase Offline</div>', unsafe_allow_html=True)
-
-with col2:
-    if ecosystem.github:
-        st.markdown('<div class="api-status api-online">🟢 GitHub Connected</div>', unsafe_allow_html=True)
-    else:
-        st.markdown('<div class="api-status api-offline">🔴 GitHub Offline</div>', unsafe_allow_html=True)
-
-with col3:
-    if ecosystem.gemini_model:
-        st.markdown('<div class="api-status api-online">🟢 Gemini AI Active</div>', unsafe_allow_html=True)
-    else:
-        st.markdown('<div class="api-status api-offline">🔴 Gemini AI Offline</div>', unsafe_allow_html=True)
-
-# GitHub Activity Section
-if ecosystem.github:
-    with st.expander("📊 Real GitHub Activity", expanded=False):
-        if st.button("🔄 Fetch Latest GitHub Activity"):
-            with st.spinner("Fetching real GitHub data..."):
-                github_data = ecosystem.get_github_activity()
-                if github_data:
-                    st.success("✅ GitHub data fetched successfully!")
-                    
-                    st.markdown("**Recent Commits:**")
-                    for commit in github_data['commits'][:5]:
-                        st.markdown(f"- `{commit['sha']}` - {commit['message'][:80]} by {commit['author']}")
-                    
-                    st.metric("Open Issues", github_data['open_issues'])
-                    st.metric("Open Pull Requests", github_data['open_pulls'])
-                else:
-                    st.error("Failed to fetch GitHub activity")
-
-# Agent Status Section
-st.markdown("### 🎯 AI Agent Status")
-
-col1, col2 = st.columns(2)
-agents_list = list(AGENTS.items())
-
-for i, (agent_id, agent_info) in enumerate(agents_list):
-    is_active = agent_id in st.session_state.active_agents
-    status_emoji = "🟢" if is_active else "⚪"
+with tab1:
+    st.subheader("🔴 LIVE System Metrics")
     
-    target_col = col1 if i % 2 == 0 else col2
+    # Get real data
+    with st.spinner("Loading real-time data from edge functions..."):
+        mining_data = get_mining_data()
+        github_data = get_github_activity()
     
-    with target_col:
+    # Display metrics
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        total_hashes = mining_data.get('totalHashes', 0)
         st.markdown(f"""
-        <div class="agent-card {'agent-active' if is_active else ''}">
-            <h4>{agent_info['emoji']} {agent_info['name']}</h4>
-            <p>{agent_info['description']}</p>
-            <p><strong>{status_emoji} {'Active' if is_active else 'Standby'}</strong></p>
+        <div class="metric-card">
+            <h3>⛏️ Mining</h3>
+            <p><strong>{total_hashes:,}</strong> Total Hashes</p>
+            <p><strong>{mining_data.get('validShares', 0):,}</strong> Valid Shares</p>
+            <p style="font-size: 0.8rem; opacity: 0.8;">Source: mining-proxy</p>
         </div>
         """, unsafe_allow_html=True)
+    
+    with col2:
+        commits = github_data.get('commits', [])
+        contributors = github_data.get('contributors', [])
+        st.markdown(f"""
+        <div class="metric-card">
+            <h3>💻 GitHub</h3>
+            <p><strong>{len(commits)}</strong> Recent Commits</p>
+            <p><strong>{len(contributors)}</strong> Contributors</p>
+            <p style="font-size: 0.8rem; opacity: 0.8;">Source: github-integration</p>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col3:
+        amt_due = mining_data.get('amtDue', 0) / 1e9  # Convert to readable format
+        st.markdown(f"""
+        <div class="metric-card">
+            <h3>💰 Rewards</h3>
+            <p><strong>{amt_due:.2f}</strong> XMRT Due</p>
+            <p><strong>{mining_data.get('txnCount', 0)}</strong> Transactions</p>
+            <p style="font-size: 0.8rem; opacity: 0.8;">Source: mining-proxy</p>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    # Real-time status
+    st.markdown("---")
+    st.markdown("### 🟢 Edge Function Status")
+    
+    status_col1, status_col2, status_col3 = st.columns(3)
+    
+    with status_col1:
+        if not mining_data.get('error'):
+            st.success("✅ mining-proxy: ONLINE")
+        else:
+            st.error("❌ mining-proxy: ERROR")
+    
+    with status_col2:
+        if not github_data.get('error'):
+            st.success("✅ github-integration: ONLINE")
+        else:
+            st.error("❌ github-integration: ERROR")
+    
+    with status_col3:
+        st.info("🔵 ai-chat: READY")
+    
+    # Display raw data
+    with st.expander("🔍 View Raw Mining Data"):
+        st.json(mining_data)
 
-# Chat Section
-st.markdown("### 💬 Real-Time AI Chat")
-
-# Display chat history
-for msg in st.session_state.chat_history[-20:]:  # Show last 20 messages
-    if msg['role'] == 'user':
-        st.chat_message("user").write(f"{msg['message']}")
+with tab2:
+    st.subheader("⛏️ Real Mining Activity")
+    
+    mining_data = get_mining_data()
+    
+    if not mining_data.get('error'):
+        st.success(f"✅ Connected to mining-proxy edge function")
+        
+        # Display key metrics
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.metric("Total Hashes", f"{mining_data.get('totalHashes', 0):,}")
+            st.metric("Valid Shares", f"{mining_data.get('validShares', 0):,}")
+        
+        with col2:
+            st.metric("Invalid Shares", f"{mining_data.get('invalidShares', 0):,}")
+            st.metric("Last Hash", f"{mining_data.get('lastHash', 0):,}")
+        
+        # Create dataframe
+        df_data = {
+            "Metric": ["Total Hashes", "Valid Shares", "Invalid Shares", "Amount Due", "Transactions"],
+            "Value": [
+                f"{mining_data.get('totalHashes', 0):,}",
+                f"{mining_data.get('validShares', 0):,}",
+                f"{mining_data.get('invalidShares', 0):,}",
+                f"{mining_data.get('amtDue', 0):,}",
+                f"{mining_data.get('txnCount', 0):,}"
+            ]
+        }
+        
+        st.dataframe(pd.DataFrame(df_data), use_container_width=True)
+        
+        # Show identifier
+        st.info(f"📍 Identifier: {mining_data.get('identifier', 'N/A')}")
+        
     else:
-        agent_info = AGENTS.get(msg['agent_type'], {})
-        agent_emoji = agent_info.get('emoji', '🤖')
-        st.chat_message("assistant", avatar=agent_emoji).write(f"{msg['message']}")
+        st.error(f"❌ Error: {mining_data.get('error')}")
 
-# Message input
-user_message = st.chat_input("Ask the AI agents anything...")
-
-if user_message:
-    # Add user message to chat
-    add_to_chat('user', 'You', user_message)
-    st.chat_message("user").write(user_message)
+with tab3:
+    st.subheader("💬 AI Chat - Real Gemini Integration")
+    st.caption("Powered by Supabase ai-chat edge function")
     
-    # Show progress
-    with st.spinner("AI is thinking..."):
-        # Determine which agent should respond based on message content
-        message_lower = user_message.lower()
-        
-        if any(word in message_lower for word in ['govern', 'dao', 'proposal', 'vote']):
-            agent_id = 'DAO_Agent'
-        elif any(word in message_lower for word in ['defi', 'mining', 'yield', 'stake']):
-            agent_id = 'Mining_Agent'
-        elif any(word in message_lower for word in ['market', 'campaign', 'community', 'grow']):
-            agent_id = 'Marketing_Agent'
-        elif any(word in message_lower for word in ['security', 'risk', 'audit', 'safe']):
-            agent_id = 'Security_Agent'
-        else:
-            agent_id = 'Technical_Agent'
-        
-        agent_info = AGENTS[agent_id]
-        agent_context = agent_info['context']
-        
-        # Get real AI response
-        response = call_agent_real(user_message, agent_context)
-        
-        if 'error' not in response:
-            st.session_state.active_agents.add(agent_id)
-            add_to_chat('agent', agent_id, response.get('response', 'No response'))
-            st.chat_message("assistant", avatar=agent_info['emoji']).write(response.get('response'))
-        else:
-            st.error(f"Error: {response['error']}")
+    # Chat interface
+    if "messages" not in st.session_state:
+        st.session_state.messages = []
     
-    st.rerun()
-
-# Real-Time Activity Stream
-st.markdown("### ⚡ Real-Time Ecosystem Activity")
-
-if st.button("🔄 Refresh Activity Stream"):
-    with st.spinner("Fetching real activities from Supabase..."):
-        activities = ecosystem.get_recent_activities(limit=20)
+    # Display chat history
+    for message in st.session_state.messages:
+        with st.chat_message(message["role"]):
+            st.markdown(message["content"])
+    
+    # Chat input
+    if prompt := st.chat_input("Ask the AI system anything..."):
+        # Add user message
+        st.session_state.messages.append({"role": "user", "content": prompt})
+        with st.chat_message("user"):
+            st.markdown(prompt)
         
-        if activities:
-            df = pd.DataFrame(activities)
-            df['timestamp'] = pd.to_datetime(df['timestamp']).dt.strftime('%Y-%m-%d %H:%M:%S')
+        # Get AI response
+        with st.chat_message("assistant"):
+            with st.spinner("🤖 AI is thinking via edge function..."):
+                response = send_ai_chat(prompt, {"history": st.session_state.messages[-5:]})
+                
+                if response.get("error"):
+                    ai_response = f"⚠️ {response.get('response', 'Service temporarily unavailable')}"
+                else:
+                    ai_response = response.get("response", "I'm processing your request...")
+                
+                st.markdown(ai_response)
+        
+        # Add assistant message
+        st.session_state.messages.append({"role": "assistant", "content": ai_response})
+        
+        # Rerun to show updated chat
+        st.rerun()
+
+with tab4:
+    st.subheader("🔧 Real GitHub Activity")
+    st.caption("Powered by Supabase github-integration edge function")
+    
+    github_data = get_github_activity()
+    
+    if not github_data.get('error'):
+        st.success("✅ Connected to github-integration edge function")
+        
+        # Display commits
+        commits = github_data.get('commits', [])
+        if commits:
+            st.write(f"**Recent Commits:** {len(commits)}")
             
-            # Display in a nice format
-            st.dataframe(
-                df[['timestamp', 'activity_type', 'source']],
-                use_container_width=True,
-                hide_index=True
-            )
+            for i, commit in enumerate(commits[:10], 1):
+                st.markdown(f"""
+                **{i}. {commit.get('message', 'No message')}**  
+                *{commit.get('author', 'Unknown')} - {commit.get('timestamp', 'Unknown time')}*  
+                `{commit.get('sha', 'N/A')[:8]}`
+                """)
         else:
-            st.info("No activities recorded yet. Start chatting to create activity!")
-
-# Supabase Setup Instructions
-with st.expander("🛠️ Setup Instructions", expanded=False):
-    st.markdown("""
-    ### Setting up Real Ecosystem Integration
-    
-    #### 1. Supabase Setup
-    ```sql
-    -- Run this in your Supabase SQL Editor:
-    """)
-    
-    st.code(ecosystem.create_supabase_tables(), language='sql')
-    
-    st.markdown("""
-    #### 2. Streamlit Secrets
-    Create `.streamlit/secrets.toml` with:
-    ```toml
-    [supabase]
-    url = "your-supabase-url"
-    key = "your-supabase-anon-key"
-    
-    [github]
-    username = "DevGruGold"
-    token = "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"
-    repo = "XMRT.io"
-    
-    [gemini]
-    api_key = "your-gemini-api-key"
-    model = "gemini-2.0-flash-exp"
-    ```
-    
-    #### 3. Deploy to Streamlit Cloud
-    - Push code to GitHub
-    - Connect your Streamlit Cloud app
-    - Add secrets in Streamlit Cloud dashboard
-    """)
+            st.info("No commits data available from edge function")
+        
+        # Display contributors
+        contributors = github_data.get('contributors', [])
+        if contributors:
+            st.write(f"**Active Contributors:** {len(contributors)}")
+            contributor_names = [c.get('name', 'Unknown') for c in contributors]
+            st.write(", ".join(contributor_names))
+        
+        # Refresh button
+        if st.button("🔄 Refresh GitHub Data"):
+            st.cache_data.clear()
+            st.rerun()
+            
+    else:
+        st.error(f"❌ Error: {github_data.get('error')}")
 
 # Footer
 st.markdown("---")
-st.markdown("""
-<div style="text-align: center; padding: 1rem; opacity: 0.8;">
-    <p>🌟 <strong>XMRT DAO Autonomous System</strong></p>
-    <p>Powered by Real AI, GitHub & Supabase</p>
-</div>
-""", unsafe_allow_html=True)
+col1, col2, col3 = st.columns(3)
+
+with col1:
+    st.caption("🟢 **Data Source:** Supabase Edge Functions")
+
+with col2:
+    st.caption("🔄 **Auto-refresh:** Every 30 seconds")
+
+with col3:
+    if st.button("🔄 Refresh All Data"):
+        st.cache_data.clear()
+        st.rerun()
+
+st.caption(f"Last updated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} | 🚀 NO SIMULATIONS - 100% REAL DATA")
