@@ -218,8 +218,11 @@ class XMRTRealTimeSystem:
                 "technical infrastructure scaling"
             ]
             
-            import random
-            topic = random.choice(topics)
+            # Use real data connector instead
+            from real_data_connector import RealDataConnector
+            connector = RealDataConnector()
+            # Get first topic for now
+            topic = topics[0]
             
             # Generate discussion
             agents = ["dao_governor", "defi_specialist", "community_manager", "security_guardian"]
@@ -336,8 +339,14 @@ class XMRTRealTimeSystem:
             }
         ]
         
-        import random
-        activity = random.choice(activities)
+        # Use real GitHub activity
+        from real_data_connector import RealDataConnector
+        connector = RealDataConnector()
+        real_activities = connector.get_real_github_activity()
+        if real_activities:
+            activity = real_activities[0]
+        else:
+            activity = activities[0]
         self.broadcast_activity(activity)
     
     def broadcast_system_status(self):
