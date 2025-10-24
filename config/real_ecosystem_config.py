@@ -1,301 +1,246 @@
 #!/usr/bin/env python3
 """
 Real Ecosystem Configuration and Integration
-Replaces all simulations with real connections to Supabase, GitHub, and Gemini
+Uses Supabase Edge Functions for all real data operations
 """
 
 import os
 import logging
-from typing import Dict, Optional, Any
+import requests
+from typing import Dict, Optional, Any, List
 import streamlit as st
 from datetime import datetime
-from github import Github
-from supabase import create_client, Client
-import google.generativeai as genai
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+# Supabase Edge Function Configuration
+SUPABASE_URL = "https://vawouugtzwmejxqkeqqj.supabase.co"
+SUPABASE_KEY = "sb_publishable_yIaroctFhoYStx0f9XajBg_zhpuVulw"
 
 
 class RealEcosystemConfig:
     """
     Real ecosystem configuration manager
-    Handles all real connections to external services
+    Uses Supabase edge functions for all operations
     """
     
     def __init__(self):
-        self.supabase: Optional[Client] = None
-        self.github: Optional[Github] = None
-        self.gemini_model = None
-        self._initialize_services()
+        self.base_url = SUPABASE_URL
+        self.api_key = SUPABASE_KEY
+        self.headers = {
+            "Content-Type": "application/json",
+            "apikey": self.api_key,
+            "Authorization": f"Bearer {self.api_key}"
+        }
+        
+        # Edge function endpoints
+        self.endpoints = {
+            "ai_chat": f"{self.base_url}/functions/v1/ai-chat",
+            "mining_proxy": f"{self.base_url}/functions/v1/mining-proxy",
+            "python_executor": f"{self.base_url}/functions/v1/python-executor",
+            "github_integration": f"{self.base_url}/functions/v1/github-integration",
+            "task_orchestrator": f"{self.base_url}/functions/v1/task-orchestrator"
+        }
+        
+        self._test_connections()
     
-    def _initialize_services(self):
-        """Initialize all real services"""
+    def _test_connections(self):
+        """Test edge function connections"""
         try:
-            # Initialize Supabase
-            if hasattr(st, 'secrets') and 'supabase' in st.secrets:
-                supabase_url = st.secrets['supabase']['url']
-                supabase_key = st.secrets['supabase']['key']
-                self.supabase = create_client(supabase_url, supabase_key)
-                logger.info("✅ Supabase connected")
+            response = requests.get(
+                self.endpoints["mining_proxy"],
+                headers=self.headers,
+                timeout=5
+            )
+            if response.status_code in [200, 201, 204]:
+                logger.info("✅ Edge functions connected successfully")
             else:
-                logger.warning("⚠️  Supabase credentials not found in secrets")
-            
-            # Initialize GitHub
-            if hasattr(st, 'secrets') and 'github' in st.secrets:
-                github_token = st.secrets['github']['token']
-                self.github = Github(github_token)
-                logger.info("✅ GitHub connected")
-            else:
-                logger.warning("⚠️  GitHub credentials not found in secrets")
-            
-            # Initialize Gemini
-            if hasattr(st, 'secrets') and 'gemini' in st.secrets:
-                genai.configure(api_key=st.secrets['gemini']['api_key'])
-                model_name = st.secrets['gemini'].get('model', 'gemini-2.0-flash-exp')
-                self.gemini_model = genai.GenerativeModel(model_name)
-                logger.info("✅ Gemini AI connected")
-            else:
-                logger.warning("⚠️  Gemini credentials not found in secrets")
-                
+                logger.warning(f"⚠️  Edge functions returned status: {response.status_code}")
         except Exception as e:
-            logger.error(f"❌ Service initialization error: {e}")
+            logger.error(f"❌ Edge function connection test failed: {e}")
+    
+    def get_mining_data(self) -> Dict[str, Any]:
+        """Get real mining data from edge function"""
+        try:
+            response = requests.get(
+                self.endpoints["mining_proxy"],
+                headers=self.headers,
+                timeout=10
+            )
+            response.raise_for_status()
+            return response.json()
+        except Exception as e:
+            logger.error(f"❌ Failed to get mining data: {e}")
+            return {"error": str(e), "miners": []}
+    
+    def send_ai_chat(self, message: str, context: Optional[Dict] = None) -> Dict[str, Any]:
+        """Send message to AI via edge function"""
+        try:
+            payload = {
+                "message": message,
+                "context": context or {},
+                "timestamp": datetime.now().isoformat()
+            }
+            
+            response = requests.post(
+                self.endpoints["ai_chat"],
+                headers=self.headers,
+                json=payload,
+                timeout=30
+            )
+            response.raise_for_status()
+            return response.json()
+        except Exception as e:
+            logger.error(f"❌ AI chat failed: {e}")
+            return {"error": str(e), "response": "AI service unavailable"}
+    
+    def get_github_activity(self, action: str = "get_recent_activity") -> Dict[str, Any]:
+        """Get GitHub activity via edge function"""
+        try:
+            payload = {
+                "action": action,
+                "timestamp": datetime.now().isoformat()
+            }
+            
+            response = requests.post(
+                self.endpoints["github_integration"],
+                headers=self.headers,
+                json=payload,
+                timeout=30
+            )
+            response.raise_for_status()
+            return response.json()
+        except Exception as e:
+            logger.error(f"❌ GitHub activity fetch failed: {e}")
+            return {"error": str(e), "commits": [], "contributors": []}
+    
+    def create_task(self, task_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Create task via edge function"""
+        try:
+            payload = {
+                **task_data,
+                "timestamp": datetime.now().isoformat()
+            }
+            
+            response = requests.post(
+                self.endpoints["task_orchestrator"],
+                headers=self.headers,
+                json=payload,
+                timeout=30
+            )
+            response.raise_for_status()
+            return response.json()
+        except Exception as e:
+            logger.error(f"❌ Task creation failed: {e}")
+            return {"error": str(e), "task_id": None}
     
     def log_activity(self, activity_type: str, data: Dict[str, Any]) -> bool:
         """
-        Log real activity to Supabase
+        Log activity via edge function
         """
-        if not self.supabase:
-            logger.warning("Supabase not available, skipping activity log")
-            return False
-        
         try:
+            # Use task orchestrator to log activities
             activity_record = {
-                'timestamp': datetime.now().isoformat(),
+                'title': f'{activity_type} Activity',
                 'activity_type': activity_type,
                 'data': data,
                 'source': 'streamlit_boardroom'
             }
             
-            result = self.supabase.table('ecosystem_activities').insert(activity_record).execute()
-            logger.info(f"✅ Activity logged: {activity_type}")
-            return True
+            result = self.create_task(activity_record)
+            if not result.get('error'):
+                logger.info(f"✅ Activity logged: {activity_type}")
+                return True
+            return False
             
         except Exception as e:
             logger.error(f"❌ Failed to log activity: {e}")
             return False
     
-    def get_recent_activities(self, limit: int = 50):
+    def get_recent_activities(self, limit: int = 50) -> List[Dict[str, Any]]:
         """
-        Fetch real activities from Supabase
+        Fetch real activities from edge functions
         """
-        if not self.supabase:
-            return []
-        
         try:
-            result = self.supabase.table('ecosystem_activities')\
-                .select('*')\
-                .order('timestamp', desc=True)\
-                .limit(limit)\
-                .execute()
+            activities = []
             
-            return result.data if result.data else []
+            # Get mining activities
+            mining_data = self.get_mining_data()
+            miners = mining_data.get("miners", mining_data.get("data", []))
+            for miner in miners[:limit//2]:
+                activities.append({
+                    "type": "mining",
+                    "description": f"Miner {miner.get('id', 'unknown')} - {miner.get('hashrate', 0)} H/s",
+                    "timestamp": miner.get("timestamp", datetime.now().isoformat()),
+                    "source": "mining-proxy"
+                })
+            
+            # Get GitHub activities
+            github_data = self.get_github_activity()
+            for commit in github_data.get("commits", [])[:limit//2]:
+                activities.append({
+                    "type": "github",
+                    "description": f"Commit: {commit.get('message', 'No message')}",
+                    "timestamp": commit.get("timestamp", datetime.now().isoformat()),
+                    "source": "github-integration"
+                })
+            
+            activities.sort(key=lambda x: x.get("timestamp", ""), reverse=True)
+            return activities[:limit]
             
         except Exception as e:
             logger.error(f"❌ Failed to fetch activities: {e}")
             return []
     
-    def get_github_activity(self, repo_name: str = "XMRT.io"):
-        """
-        Fetch real GitHub activity
-        """
-        if not self.github:
-            return None
-        
+    def get_system_metrics(self) -> Dict[str, Any]:
+        """Get system metrics from edge functions"""
         try:
-            username = st.secrets['github'].get('username', 'DevGruGold')
-            repo = self.github.get_repo(f"{username}/{repo_name}")
+            mining_data = self.get_mining_data()
+            miners = mining_data.get("miners", mining_data.get("data", []))
             
-            # Get recent commits
-            commits = list(repo.get_commits()[:10])
+            github_data = self.get_github_activity()
             
-            # Get open issues
-            issues = list(repo.get_issues(state='open')[:10])
-            
-            # Get recent pull requests
-            pulls = list(repo.get_pulls(state='open')[:10])
-            
-            activity_data = {
-                'commits': [{
-                    'sha': c.sha[:7],
-                    'message': c.commit.message,
-                    'author': c.commit.author.name,
-                    'date': c.commit.author.date.isoformat()
-                } for c in commits],
-                'open_issues': len(issues),
-                'open_pulls': len(pulls),
-                'last_updated': datetime.now().isoformat()
-            }
-            
-            # Log this activity to Supabase
-            self.log_activity('github_sync', activity_data)
-            
-            return activity_data
-            
-        except Exception as e:
-            logger.error(f"❌ Failed to fetch GitHub activity: {e}")
-            return None
-    
-    def generate_ai_response(self, message: str, agent_context: str = "eliza") -> Dict:
-        """
-        Generate real AI response using Gemini
-        """
-        if not self.gemini_model:
             return {
-                'success': False,
-                'error': 'Gemini AI not configured'
+                "mining": {
+                    "active_miners": len(miners),
+                    "total_hashrate": sum(m.get("hashrate", 0) for m in miners),
+                    "last_updated": datetime.now().isoformat()
+                },
+                "github": {
+                    "commits": len(github_data.get("commits", [])),
+                    "contributors": len(github_data.get("contributors", [])),
+                    "last_updated": datetime.now().isoformat()
+                },
+                "system": {
+                    "status": "operational",
+                    "data_source": "supabase_edge_functions",
+                    "last_updated": datetime.now().isoformat()
+                }
             }
-        
-        try:
-            # Build context-aware prompt
-            agent_personas = {
-                'eliza': "You are Eliza, a helpful and friendly AI assistant in the XMRT ecosystem. Respond naturally and helpfully.",
-                'dao_governor': "You are the DAO Governor, responsible for governance and decision-making. Be authoritative and diplomatic.",
-                'defi_specialist': "You are the DeFi Specialist, an expert in decentralized finance. Be technical and precise.",
-                'community_manager': "You are the Community Manager, enthusiastic about growing and engaging the community.",
-                'security_guardian': "You are the Security Guardian, focused on safety and risk management. Be cautious and protective."
-            }
-            
-            prompt = f"{agent_personas.get(agent_context, agent_personas['eliza'])}\n\nUser message: {message}\n\nRespond naturally:"
-            
-            response = self.gemini_model.generate_content(prompt)
-            
-            response_data = {
-                'success': True,
-                'response': response.text,
-                'agent_type': agent_context,
-                'timestamp': datetime.now().isoformat()
-            }
-            
-            # Log AI interaction
-            self.log_activity('ai_interaction', {
-                'agent': agent_context,
-                'user_message': message,
-                'ai_response': response.text[:200]  # Store preview
-            })
-            
-            return response_data
-            
         except Exception as e:
-            logger.error(f"❌ AI response generation failed: {e}")
-            return {
-                'success': False,
-                'error': str(e)
-            }
+            logger.error(f"❌ Failed to get system metrics: {e}")
+            return {"error": str(e)}
     
-    def update_deployment_status(self, deployment: str, status: str):
-        """
-        Update deployment status in Supabase
-        """
-        if not self.supabase:
-            return False
-        
+    def is_online(self) -> bool:
+        """Check if edge functions are online"""
         try:
-            status_record = {
-                'deployment': deployment,
-                'status': status,
-                'timestamp': datetime.now().isoformat(),
-                'last_check': datetime.now().isoformat()
-            }
-            
-            # Upsert deployment status
-            result = self.supabase.table('deployment_status').upsert(
-                status_record,
-                on_conflict='deployment'
-            ).execute()
-            
-            logger.info(f"✅ Deployment status updated: {deployment} -> {status}")
-            return True
-            
-        except Exception as e:
-            logger.error(f"❌ Failed to update deployment status: {e}")
+            response = requests.get(
+                self.endpoints["mining_proxy"],
+                headers=self.headers,
+                timeout=5
+            )
+            return response.status_code in [200, 201, 204]
+        except:
             return False
-    
-    def create_supabase_tables(self):
-        """
-        SQL commands to create necessary Supabase tables
-        Run these in your Supabase SQL editor
-        """
-        sql_commands = """
-        -- Ecosystem Activities Table
-        CREATE TABLE IF NOT EXISTS ecosystem_activities (
-            id BIGSERIAL PRIMARY KEY,
-            timestamp TIMESTAMPTZ DEFAULT NOW(),
-            activity_type TEXT NOT NULL,
-            data JSONB,
-            source TEXT,
-            created_at TIMESTAMPTZ DEFAULT NOW()
-        );
-        
-        -- Index for faster queries
-        CREATE INDEX IF NOT EXISTS idx_activities_timestamp ON ecosystem_activities(timestamp DESC);
-        CREATE INDEX IF NOT EXISTS idx_activities_type ON ecosystem_activities(activity_type);
-        
-        -- Deployment Status Table
-        CREATE TABLE IF NOT EXISTS deployment_status (
-            deployment TEXT PRIMARY KEY,
-            status TEXT NOT NULL,
-            timestamp TIMESTAMPTZ DEFAULT NOW(),
-            last_check TIMESTAMPTZ,
-            metadata JSONB
-        );
-        
-        -- AI Conversations Table
-        CREATE TABLE IF NOT EXISTS ai_conversations (
-            id BIGSERIAL PRIMARY KEY,
-            user_id TEXT,
-            agent_type TEXT,
-            message TEXT,
-            response TEXT,
-            timestamp TIMESTAMPTZ DEFAULT NOW(),
-            metadata JSONB
-        );
-        
-        -- System Metrics Table
-        CREATE TABLE IF NOT EXISTS system_metrics (
-            id BIGSERIAL PRIMARY KEY,
-            metric_name TEXT NOT NULL,
-            metric_value NUMERIC,
-            unit TEXT,
-            timestamp TIMESTAMPTZ DEFAULT NOW(),
-            tags JSONB
-        );
-        
-        -- Enable Row Level Security (optional but recommended)
-        ALTER TABLE ecosystem_activities ENABLE ROW LEVEL SECURITY;
-        ALTER TABLE deployment_status ENABLE ROW LEVEL SECURITY;
-        ALTER TABLE ai_conversations ENABLE ROW LEVEL SECURITY;
-        ALTER TABLE system_metrics ENABLE ROW LEVEL SECURITY;
-        
-        -- Create policies for authenticated access
-        CREATE POLICY "Enable read access for authenticated users" ON ecosystem_activities
-            FOR SELECT USING (auth.role() = 'authenticated');
-        
-        CREATE POLICY "Enable insert for authenticated users" ON ecosystem_activities
-            FOR INSERT WITH CHECK (auth.role() = 'authenticated');
-        """
-        
-        return sql_commands
 
 
 # Global instance
-_ecosystem_config = None
+_config = None
 
 def get_ecosystem_config() -> RealEcosystemConfig:
-    """
-    Get or create ecosystem config singleton
-    """
-    global _ecosystem_config
-    if _ecosystem_config is None:
-        _ecosystem_config = RealEcosystemConfig()
-    return _ecosystem_config
+    """Get or create the global ecosystem config"""
+    global _config
+    if _config is None:
+        _config = RealEcosystemConfig()
+    return _config
