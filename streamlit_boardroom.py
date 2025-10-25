@@ -216,7 +216,7 @@ def send_ai_chat(message: str, context: Any = None) -> Dict[str, Any]:
     try:
         logger.info(f"Sending AI chat message: {message[:50]}...")
         payload = {
-            "message": message,
+            "text": message,
             "context": context or {},
             "timestamp": datetime.now().isoformat()
         }
@@ -444,7 +444,7 @@ with tab3:
                 if response.get("error"):
                     ai_response = f"⚠️ {response.get('response', 'Service temporarily unavailable')}"
                 else:
-                    ai_response = response.get("response", "I'm processing your request...")
+                    ai_response = response.get("reply", "I'm processing your request...")
                 
                 st.markdown(ai_response)
         
