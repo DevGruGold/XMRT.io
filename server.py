@@ -1,5 +1,7 @@
 # XMRT Eliza Server - Serves HTML chat interface and Knowledge Bridge API
 from fastapi import FastAPI
+from redis_eventbus import event_bus
+
 from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 import os
@@ -233,3 +235,21 @@ except ImportError:
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8000))
     uvicorn.run(app, host="0.0.0.0", port=port)
+
+
+@app.on_event("startup")
+async def startup_event():
+    """Initialize event bus listeners on startup"""
+    import asyncio
+    
+    # Start listening to ecosystem events
+    channels = [
+        'meshnet:verified',
+        'mining:update',
+        'dao:proposal',
+        'agent:activity',
+        'boardroom:message'
+    ]
+    
+    asyncio.create_task(event_bus.listen(channels))
+    logger.info(f"Event bus listening to: {channels}")

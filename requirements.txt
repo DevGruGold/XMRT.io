@@ -29,3 +29,6 @@ uvicorn
 # Real Ecosystem Integration
 supabase>=2.0.0
 google-generativeai>=0.3.0
+
+# Redis support for event bus
+upstash-redis==0.15.0
