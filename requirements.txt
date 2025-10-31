@@ -1,34 +1,28 @@
-# Core Flask dependencies
-Flask==2.3.3
-Flask-CORS==4.0.0
-Flask-SocketIO==5.3.6
-gunicorn==21.2.0
-redis==5.0.1
+# Vercel-optimized requirements
+# Minimal dependencies for serverless deployment
+
+# Core web framework
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+
+# HTTP and async
+httpx==0.25.0
 requests==2.31.0
-python-socketio==5.9.0
-python-engineio==4.7.1
-eventlet==0.33.3
-Werkzeug==2.3.7
 
-# GitHub Integration
-PyGithub==2.7.0
+# Supabase
+supabase==2.3.0
 
-# Environment Management
+# Redis (Upstash REST API)
+upstash-redis==0.15.0
+
+# Environment
 python-dotenv==1.0.0
 
-# Data Processing
-pandas
+# Data handling
+pydantic==2.5.0
 
-# Streamlit
-streamlit
+# GitHub (lightweight)
+PyGithub==2.1.1
 
-# FastAPI (for Render deployment)
-fastapi
-uvicorn
-
-# Real Ecosystem Integration
-supabase>=2.0.0
-google-generativeai>=0.3.0
-
-# Redis support for event bus
-upstash-redis==0.15.0
+# Google AI
+google-generativeai==0.3.2
