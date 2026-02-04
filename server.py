@@ -43,7 +43,7 @@ app.add_middleware(
 
 # Environment variables
 SUPABASE_URL = os.getenv("SUPABASE_URL", "https://vawouugtzwmejxqkeqqj.supabase.co")
-SUPABASE_KEY = os.getenv("SUPABASE_KEY", "")
+SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY", "")
 DEPLOYMENT_ENV = os.getenv("VERCEL_ENV", "development")
 VERCEL_REGION = os.getenv("VERCEL_REGION", "unknown")
 
