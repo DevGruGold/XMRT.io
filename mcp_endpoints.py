@@ -45,9 +45,9 @@ async def mcp_health_check():
     """Endpoint for mCP server to check the health and availability of the system."""
     
     # Check real service health
-    supabase_status = "connected" if ecosystem.supabase else "disconnected"
-    github_status = "connected" if ecosystem.github else "disconnected"
-    gemini_status = "connected" if ecosystem.gemini_model else "disconnected"
+    supabase_status = "connected" if ecosystem.is_online() else "disconnected"
+    github_status = "integrated"
+    gemini_status = "integrated"
     
     return MCPResponse(
         status="operational",
@@ -190,9 +190,7 @@ async def get_ecosystem_stats():
             activity_by_type[act_type] = activity_by_type.get(act_type, 0) + 1
         
         # Get GitHub stats
-        github_data = None
-        if ecosystem.github:
-            github_data = ecosystem.get_github_activity()
+        github_data = ecosystem.get_github_activity()
         
         return {
             "status": "success",
@@ -201,9 +199,9 @@ async def get_ecosystem_stats():
             "activity_breakdown": activity_by_type,
             "github_stats": github_data,
             "services": {
-                "supabase": "connected" if ecosystem.supabase else "disconnected",
-                "github": "connected" if ecosystem.github else "disconnected",
-                "gemini_ai": "connected" if ecosystem.gemini_model else "disconnected"
+                "supabase": "connected" if ecosystem.is_online() else "disconnected",
+                "github": "integrated",
+                "gemini_ai": "integrated"
             }
         }
         

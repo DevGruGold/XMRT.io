@@ -4,13 +4,18 @@ Enhanced with health monitoring and Supabase connectivity checks
 """
 
 from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import JSONResponse, Response
+from fastapi.responses import JSONResponse, Response, FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 import os
 from datetime import datetime
 import httpx
 from typing import Dict, Any
 import asyncio
+from fastapi.staticfiles import StaticFiles
+
+# Import Ecosystem Routers
+from mcp_endpoints import mcp_router
+from webhook_endpoints import webhook_router
 
 # Initialize FastAPI app
 app = FastAPI(
@@ -18,6 +23,14 @@ app = FastAPI(
     description="XMRT DAO Ecosystem API with health monitoring",
     version="2.0.0"
 )
+
+# Mount Ecosystem Routers
+app.include_router(mcp_router)
+app.include_router(webhook_router)
+
+# Mount Static Files
+# We serve static assets from the root for simplicity in this Vercel setup
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # CORS Configuration
 app.add_middleware(
@@ -29,13 +42,23 @@ app.add_middleware(
 )
 
 # Environment variables
-SUPABASE_URL = os.getenv("NEXT_PUBLIC_SUPABASE_URL", "https://vawouugtzwmejxqkeqqj.supabase.co")
-SUPABASE_KEY = os.getenv("NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY", "")
+SUPABASE_URL = os.getenv("SUPABASE_URL", "https://vawouugtzwmejxqkeqqj.supabase.co")
+SUPABASE_KEY = os.getenv("SUPABASE_KEY", "")
 DEPLOYMENT_ENV = os.getenv("VERCEL_ENV", "development")
 VERCEL_REGION = os.getenv("VERCEL_REGION", "unknown")
 
 @app.get("/")
 async def root():
+    """Serve the main application"""
+    return FileResponse('index.html')
+
+@app.get("/chat")
+async def chat_page():
+    """Serve the chat interface"""
+    return FileResponse('chat.html')
+
+@app.get("/api/info")
+async def api_info():
     """Root endpoint with API information"""
     return {
         "message": "XMRT API - Decentralized Mobile Mining Infrastructure",
@@ -179,17 +202,17 @@ async def internal_error_handler(request: Request, exc: Exception):
 @app.on_event("startup")
 async def startup_event():
     """Initialize services on startup"""
-    print("🚀 XMRT API starting up...")
+    print("XMRT API starting up...")
     print(f"   Environment: {DEPLOYMENT_ENV}")
     print(f"   Region: {VERCEL_REGION}")
     print(f"   Supabase URL: {SUPABASE_URL}")
-    print("✅ XMRT API ready!")
+    print("XMRT API ready!")
 
 # Shutdown event
 @app.on_event("shutdown")
 async def shutdown_event():
     """Cleanup on shutdown"""
-    print("🛑 XMRT API shutting down...")
+    print("XMRT API shutting down...")
 
 if __name__ == "__main__":
     import uvicorn

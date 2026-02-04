@@ -15,8 +15,9 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Supabase Edge Function Configuration
-SUPABASE_URL = "https://vawouugtzwmejxqkeqqj.supabase.co"
-SUPABASE_KEY = "sb_publishable_yIaroctFhoYStx0f9XajBg_zhpuVulw"
+# Supabase Edge Function Configuration
+SUPABASE_URL = os.getenv("SUPABASE_URL", "https://vawouugtzwmejxqkeqqj.supabase.co")
+SUPABASE_KEY = os.getenv("SUPABASE_KEY", "sb_publishable_yIaroctFhoYStx0f9XajBg_zhpuVulw")
 
 
 class RealEcosystemConfig:

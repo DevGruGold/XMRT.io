@@ -6,7 +6,7 @@ fastapi==0.104.1
 uvicorn[standard]==0.24.0
 
 # HTTP and async
-httpx==0.25.0
+httpx>=0.24.0
 requests==2.31.0
 
 # Supabase
@@ -19,10 +19,10 @@ upstash-redis==0.15.0
 python-dotenv==1.0.0
 
 # Data handling
-pydantic==2.5.0
+pydantic>=2.5.0
 
 # GitHub (lightweight)
 PyGithub==2.1.1
 
 # Google AI
-google-generativeai==0.3.2
+google-generativeai>=0.3.2
