@@ -7,7 +7,7 @@ uvicorn[standard]==0.24.0
 
 # HTTP and async (compatible with supabase)
 httpx==0.24.1
-requests==2.31.0
+requests==2.32.4
 
 # Supabase
 supabase==2.3.0
